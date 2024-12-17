@@ -90,14 +90,29 @@ fn get_input_code(window: &Window) -> (u16, u16) {
     let mp = window.get_mouse_pos(minifb::MouseMode::Clamp).unwrap();
     let pos_code = mp.1 as u16 * 256 + mp.0 as u16;
     let mut key_code = 0_u16;
-    if window.get_mouse_down(minifb::MouseButton::Left)
-        || window.is_key_down(Key::A)
-        || window.is_key_down(Key::Space)
-    {
+    if window.get_mouse_down(minifb::MouseButton::Left) || window.is_key_down(Key::Space) {
         key_code += 1;
     }
     if window.get_mouse_down(minifb::MouseButton::Right) || window.is_key_down(Key::B) {
         key_code += 2;
+    }
+    if window.is_key_down(Key::Up) || window.is_key_down(Key::W) {
+        key_code += 4;
+    }
+    if window.is_key_down(Key::Down) || window.is_key_down(Key::S) {
+        key_code += 8;
+    }
+    if window.is_key_down(Key::Left) || window.is_key_down(Key::A) {
+        key_code += 16;
+    }
+    if window.is_key_down(Key::Right) || window.is_key_down(Key::D) {
+        key_code += 32;
+    }
+    if window.is_key_down(Key::N) {
+        key_code += 64;
+    }
+    if window.is_key_down(Key::M) {
+        key_code += 128;
     }
 
     (pos_code, key_code)
