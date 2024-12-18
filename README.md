@@ -88,7 +88,9 @@ The *key code* uses bitflags. We count from the least significant bit.
 |6|**Select** | **N**|
 |7|**Start** | **M**|
 
-
+<div align="left">
+<img src="examples/input_tester.gif" alt="Input demo" width="200"/>
+  </div>
 
 ### Synchronization
 
