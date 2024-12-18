@@ -68,6 +68,10 @@ The screen has a resolution of $256*256=2^{16}$ pixels. The color of each pixel 
 
 ### Input
 
+<div align="left">
+<img src="examples/input_tester.gif" alt="Input demo" width="200"/>
+  </div>
+  
 The only supported inputs are the mouse position and a list of eight keys. 
 These keys are supposed to represent the face buttons of an NES controller.
 The codes for the **A** and **B** keys also represent the left and right mouse buttons.
@@ -88,9 +92,7 @@ The *key code* uses bitflags. We count from the least significant bit.
 |6|**Select** | **N**|
 |7|**Start** | **M**|
 
-<div align="left">
-<img src="examples/input_tester.gif" alt="Input demo" width="200"/>
-  </div>
+
 
 ### Synchronization
 
