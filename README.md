@@ -68,14 +68,27 @@ The screen has a resolution of $256*256=2^{16}$ pixels. The color of each pixel 
 
 ### Input
 
-The only supported inputs are the mouse position and the left and right mouse keys.
+The only supported inputs are the mouse position and a list of eight keys. 
+These keys are supposed to represent the face buttons of an NES controller.
+The codes for the **A** and **B** keys also represent the left and right mouse buttons.
 
-On synchronization the input on the last frame is loaded into the input-buffer.
+On synchronization the new input is loaded into the input-buffer.
 
 The *position code* is the index of the pixel, the mouse is currently on.
-The *key code* is given by left_mouse+2*right_mouse. So it can have the values 0 1 2 or 3.
+The *key code* uses bitflags. We count from the least significant bit.
 
-There is no guarantee that the inputs are synced on the next frame. Before the first synchronization, the input codes are zero.
+|Bit|Input Name|Mapping in reference emulator|
+|-| -|-|
+|0|**A** / Mouse Left| **Space** / Mouse Left|
+|1|**B** / Mouse Right| **B** / Mouse Right|
+|2|**Up** | **Up** / **W**|
+|3|**Down** | **Down** / **S**|
+|4|**Left** | **Left** / **A**|
+|5|**Right** | **Right** / **D**|
+|6|**Select** | **N**|
+|7|**Start** | **M**|
+
+
 
 ### Synchronization
 
