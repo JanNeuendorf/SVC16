@@ -5,17 +5,23 @@ use clap::Parser;
 pub struct Cli {
     pub program: String,
 
-    #[arg(short, long, default_value = "1", help = "Set the window scaling")]
+    #[arg(short, long, default_value = "1", help = "Set initial window scaling")]
     pub scaling: u32,
 
     #[arg(
         short,
         long,
-        default_value = "3000000",
-        help = "Set the maximum instructions per frame"
+        default_value_t = false,
+        help = "Show cursor on the window"
     )]
-    pub max_ipf: usize,
-
+    pub cursor: bool,
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "Start in fullscreen mode"
+    )]
+    pub fullscreen: bool,
     #[arg(
         short,
         long,
@@ -26,9 +32,8 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        help = "Output instructions and value at the given address"
+        default_value = "3000000",
+        help = "Change the maximum instructions per frame"
     )]
-    pub debug: Option<Vec<u16>>,
-    #[arg(short, long, help = "Show cursor on window")]
-    pub cursor: bool,
+    pub max_ipf: usize,
 }

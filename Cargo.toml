@@ -9,7 +9,7 @@ license="MIT"
 [dependencies]
 anyhow = "1.0.93"
 clap = { version = "4.5.21", features = ["derive"] }
-minifb = "0.27.0"
+# There seems to be some incompatibility with the latest crates.io version of pixels?
 pixels = { git = "https://github.com/parasyte/pixels.git", rev = "d4df286"} 
 thiserror = "2.0.3"
 winit = "0.29.5"

@@ -1,7 +1,11 @@
 use crate::RES;
 use anyhow::Result;
 use pixels::Pixels;
-use winit::{event::MouseButton, keyboard::Key, keyboard::KeyCode};
+use winit::{
+    event::MouseButton,
+    event_loop::EventLoopWindowTarget,
+    keyboard::{Key, KeyCode},
+};
 use winit_input_helper::WinitInputHelper;
 
 pub fn read_u16s_from_file(file_path: &str) -> Result<Vec<u16>> {
@@ -37,7 +41,7 @@ pub fn update_image_buffer(imbuff: &mut [u8], screen: &[u16; RES * RES]) {
     }
 }
 
-pub fn get_input_code(input: &WinitInputHelper, pxls: &Pixels) -> Result<(u16, u16)> {
+pub fn get_input_code(input: &WinitInputHelper, pxls: &Pixels) -> (u16, u16) {
     let raw_mp = input.cursor().unwrap_or((0., 0.));
     let mp = match pxls.window_pos_to_pixel(raw_mp) {
         Ok(p) => p,
@@ -69,5 +73,10 @@ pub fn get_input_code(input: &WinitInputHelper, pxls: &Pixels) -> Result<(u16, u
     if input.key_held_logical(Key::Character("m")) {
         key_code += 128;
     }
-    Ok((pos_code, key_code))
+    (pos_code, key_code)
+}
+
+pub fn handle_event_loop_error(handle: &EventLoopWindowTarget<()>, msg: impl AsRef<str>) {
+    eprintln!("{}", msg.as_ref());
+    handle.exit();
 }

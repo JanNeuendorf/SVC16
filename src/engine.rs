@@ -67,9 +67,6 @@ impl Engine {
     pub fn wants_to_sync(&self) -> bool {
         return self.sync_called;
     }
-    pub fn get_instruction_pointer(&self) -> u16 {
-        self.instruction_pointer
-    }
     pub fn set_input(&mut self, pos_code: u16, key_code: u16) {
         self.pos_code = pos_code;
         self.key_code = key_code;
