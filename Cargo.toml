@@ -1,6 +1,6 @@
 [package]
 name = "svc16"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Jan Neuendorf"]
 description = "An emulator for a simple virtual computer"
@@ -10,4 +10,7 @@ license="MIT"
 anyhow = "1.0.93"
 clap = { version = "4.5.21", features = ["derive"] }
 minifb = "0.27.0"
+pixels = { git = "https://github.com/parasyte/pixels.git", rev = "d4df286"} 
 thiserror = "2.0.3"
+winit = "0.29.5"
+winit_input_helper = "0.16.0"

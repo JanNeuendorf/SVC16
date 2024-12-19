@@ -6,7 +6,7 @@ pub struct Cli {
     pub program: String,
 
     #[arg(short, long, default_value = "1", help = "Set the window scaling")]
-    pub scaling: usize,
+    pub scaling: u32,
 
     #[arg(
         short,
