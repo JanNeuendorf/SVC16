@@ -107,12 +107,12 @@ It follows the same convention as the screen index explained in @screen.
   table.header(
     [*Bit*],[*Controller Key*], [*Mouse Key*],[*Suggested Mapping*],
   ),
-  [0],[#emoji.a],[Left],[*Space* / Mouse~Left],
-  [1],[#emoji.b],[Right],[*B* / Mouse~Right],
+  [0],[#custom_button("A")],[Left],[*Space* / Mouse~Left],
+  [1],[#custom_button("B")],[Right],[*B* / Mouse~Right],
   [2],[#emoji.arrow.t],[-],[*Up* / *W*],
   [3],[#emoji.arrow.b],[-],[*Down* / *S*],
   [4],[#emoji.arrow.l],[-],[*Left* / *A*],
-  [5],[#emoji.arrow.t],[-],[*Right* / *D*],
+  [5],[#emoji.arrow.r],[-],[*Right* / *D*],
   [6],[#custom_button("select")],[-],[*N*],
   [7],[#custom_button("start")],[-],[*M*],
   )
@@ -123,7 +123,7 @@ It follows the same convention as the screen index explained in @screen.
 ) <inputs>
 
 The *key code* uses bitflags. 
-The bits in @inputs are supposed to indicate if a key is currently pressed (and not if it was just pressed or released). As an example, if only #emoji.a and #emoji.arrow.b are pressed, the key code is equal to the number $2^0+2^3=9$.
+The bits in @inputs are supposed to indicate if a key is currently pressed (and not if it was just pressed or released). As an example, if only #emoji.arrow.t and #emoji.arrow.r are pressed, the key code is equal to the number $2^2+2^5=36$.
 
 #not-specified[
 - It is not guaranteed on which frame the virtual machine sees an input activate or deactivate.
