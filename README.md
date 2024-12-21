@@ -22,7 +22,7 @@ You can then run a program from the cli:
 svc16 /path/to/my_rom.svc16
 ```
 
-Use `--help` to see some basic options.
+Use `--help` to get a list of available subcommands.
 
 I do not want to provide an assembler, any kind of compiler or even any ideas about things like call conventions. 
 The idea is that you have to build that yourself. You can play a game from the example folder to get an idea of what can be built.
@@ -32,13 +32,14 @@ The idea is that you have to build that yourself. You can play a game from the e
   
 
 ## Quick Overview
-> ⚠️ **Warning**: Until there are specifications with version 1.0, there could be breaking changes. 
+> [!WARNING]
+>  Until there are specifications with version 1.0, there could be breaking changes. 
 
 ### No Registers
 There are no CPU registers, just one chunk of memory. Values can be loaded from every memory address and written to every memory address.
 
 ### Everything is an unsigned 16-bit integer
-Everything is represented as a (le) unsigned 16-bit integer. That includes numbers, addresses, colors, the instruction pointer and the input. 
+Everything is represented as a (**little endian**) unsigned 16-bit integer. That includes numbers, addresses, colors, the instruction pointer and the input. 
 Booleans are represented as u16 values as well: 0 for false and >0 for true. (1 when written as a boolean.)
 
 ### Wrapping Arithmetic
@@ -64,7 +65,9 @@ The instruction pointer represents an address in main memory. It starts as zero.
 
 ### Screen
 
-The screen has a resolution of $256*256=2^{16}$ pixels. The color of each pixel is represented with 16-bits using `RGB565`. The coordinate $(x,y)$ of the screen maps to the index $256y+x$ in the screen-buffer. The coordinate $(0,0)$ is in the upper left-hand corner. Changes to the screen-buffer are not reflected on the screen until the system is synchronized.
+The screen has a resolution of $256*256=2^{16}$ pixels. The color of each pixel is represented with 16-bits using [RGB565](https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_color_formats#16-bit_RGB_(also_known_as_RGB565)).
+
+The coordinate $(x,y)$ of the screen maps to the index $256y+x$ in the screen-buffer. The coordinate $(0,0)$ is in the upper left-hand corner. Changes to the screen-buffer are not reflected on the screen until the system is synchronized.
 
 ### Input
 
@@ -73,7 +76,7 @@ The screen has a resolution of $256*256=2^{16}$ pixels. The color of each pixel 
   </div>
   
 The only supported inputs are the mouse position and a list of eight keys. 
-These keys are supposed to represent the face buttons of an NES controller.
+These keys are supposed to represent the face buttons of a NES controller.
 The codes for the **A** and **B** keys also represent the left and right mouse buttons.
 
 On synchronization the new input is loaded into the input-buffer.
@@ -109,7 +112,12 @@ All instructions are 4 values long. A value is, of course, a u16.
 The instructions have the form `opcode arg1 arg2 arg3`.
 
 In the following table, all instructions are listed. `@arg1` refers to the value at the memory address `arg1`.
-If the opcode is greater than 15, the system will abort.
+If the opcode is greater than 15, ***and the code is run***, the system will abort.
+
+> [!NOTE]
+> You can have data blobs in the binary that does not correspond with the opcodes.
+> This is fine **until and unless** you extensively try to run this blob of data as code.
+
 If one of the three arguments is not used, it can be set to any value, but it can not be omitted.
 
 When the instruction pointer advances, it does so by four positions.
