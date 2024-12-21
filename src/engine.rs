@@ -22,11 +22,13 @@ const SYNC: u16 = 15;
 
 pub struct Engine {
     memory: [u16; MEMSIZE],
-    screen: [u16; MEMSIZE],
+    screen_buffer: [u16; MEMSIZE],
+    utility_buffer: [u16; MEMSIZE],
     instruction_pointer: u16,
     pos_code: u16,
     key_code: u16,
     sync_called: bool,
+    expansion_triggered: bool,
 }
 
 #[derive(Debug, Error)]
@@ -57,11 +59,13 @@ impl Engine {
         }
         Self {
             memory,
-            screen: [0; MEMSIZE],
+            screen_buffer: [0; MEMSIZE],
+            utility_buffer: [0; MEMSIZE],
             instruction_pointer: 0,
             pos_code: 0,
             key_code: 0,
             sync_called: false,
+            expansion_triggered: false,
         }
     }
     pub fn wants_to_sync(&self) -> bool {
@@ -79,7 +83,11 @@ impl Engine {
     ) -> () {
         self.set_input(pos_code, key_code);
         self.sync_called = false;
-        *buffer = self.screen;
+        *buffer = self.screen_buffer;
+        if self.expansion_triggered {
+            self.expansion_triggered = false;
+            self.utility_buffer = [0; MEMSIZE];
+        }
     }
 }
 impl Engine {
@@ -89,11 +97,17 @@ impl Engine {
     fn set(&mut self, index: u16, value: u16) {
         self.memory[index as usize] = value;
     }
-    fn get_screen(&self, index: u16) -> u16 {
-        return self.screen[index as usize];
+    fn get_screen_buffer(&self, index: u16) -> u16 {
+        return self.screen_buffer[index as usize];
     }
-    fn set_screen(&mut self, index: u16, value: u16) {
-        self.screen[index as usize] = value;
+    fn get_utility_buffer(&self, index: u16) -> u16 {
+        return self.utility_buffer[index as usize];
+    }
+    fn set_screen_buffer(&mut self, index: u16, value: u16) {
+        self.screen_buffer[index as usize] = value;
+    }
+    fn set_utility_buffer(&mut self, index: u16, value: u16) {
+        self.utility_buffer[index as usize] = value;
     }
     pub fn read_instruction(&self) -> [u16; 4] {
         return [0, 1, 2, 3].map(|o| self.get(self.instruction_pointer.wrapping_add(o)));
@@ -168,11 +182,19 @@ impl Engine {
                 self.advance_inst_ptr();
             }
             PRINT => {
-                self.set_screen(self.get(arg2), self.get(arg1));
+                if arg3 == 0 {
+                    self.set_screen_buffer(self.get(arg2), self.get(arg1));
+                } else {
+                    self.set_utility_buffer(self.get(arg2), self.get(arg1));
+                }
                 self.advance_inst_ptr();
             }
             READ => {
-                self.set(arg2, self.get_screen(self.get(arg1)));
+                if arg3 == 0 {
+                    self.set(arg2, self.get_screen_buffer(self.get(arg1)));
+                } else {
+                    self.set(arg2, self.get_utility_buffer(self.get(arg1)));
+                }
                 self.advance_inst_ptr();
             }
             BAND => {
@@ -189,6 +211,9 @@ impl Engine {
                 self.sync_called = true;
                 self.set(arg1, self.pos_code);
                 self.set(arg2, self.key_code);
+                if arg3 > 0 {
+                    self.expansion_triggered = true;
+                }
                 self.advance_inst_ptr();
             }
             _ => return Err(EngineError::InvalidInstruction),

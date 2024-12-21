@@ -47,6 +47,12 @@ This means there can be no features that might only available in one implementat
 It also means, that the performance characteristics must be the same.
 An emulator can either run the system at the intended speed, or it can not. 
 
+== Expandability
+
+This might seem at odds with the previous goal. 
+But if adding a new feature always requires changing the specification, that either means that supporting any new feature means breaking all compatibility, or it means that any expansions are ruled out forever. The compromise is that the behavior for the computer itself is fixed and we define an interface and rules for expansions that can be emulated together with the computer.
+The Idea is that it is always to know this specification and one specification (if any) for the expansion.
+
 
 = General Principles
 
@@ -172,11 +178,11 @@ All instructions are listed in @instructions.
   [8],[*Deref*],[`@arg2=@(@arg1+arg3)`],
   [9],[*Ref*],[`@(@arg1+arg3)=@arg2`],
   [10],[*Inst*],[`@arg1=inst_ptr`],
-  [11],[*Print*],[Writes `color=@arg1` to `index=@arg2` of the screen buffer.],
-  [12],[*Read*],[Copies `index=@arg1` of the screen buffer to `@arg2`.],
+  [11],[*Print*],[Writes `value=@arg1` to `index=@arg2` of buffer `arg3`],
+  [12],[*Read*],[Copies `index=@arg1` of buffer `arg3` to `@arg2`.],
   [13],[*Band*],[`@arg3=@arg1&@arg2` (binary and)],
   [14],[*Xor*],[`@arg3=@arg1^@arg2` (binary exclusive or)],
-  [15],[*Sync*],[Puts `@arg1=position_code`, `@arg2=key_code` and synchronizes (in that order).],
+  [15],[*Sync*],[Puts `@arg1=position_code`, `@arg2=key_code` and synchronizes (in that order).If arg3!=0, it triggers the expansion port mechanism.],
   )
 
   #figure(
@@ -185,6 +191,8 @@ All instructions are listed in @instructions.
 ) <instructions>
 
 Every instruction shown in @instructions advances the instruction pointer by four positions _after_ it is completed. The exceptions to this are the *GoTo* and *Skip* instructions. They only do this, if the condition is _not_ met.
+
+When an argument refers to the name of a buffer, it means the screen buffer if it is 0 and the utility buffer otherwise.
 
 = Constructing the Program
 
@@ -209,6 +217,40 @@ There is intentionally no way of restarting or even quitting a program from with
   - There is no rule for how (or even if) the cause of the exception is reported.
   - It is not guaranteed that the emulator itself closes if an exception occurs. (So you can not use it to quit a program.)
 ]
+
+= The Utility Buffer and the Expansion Port 
+
+The utility buffer behaves a lot like the screen buffer with the obvious difference that it is not drawn to the screen.
+This can be used for intermediate storage at runtime, but it is always initialized to be filled with zeros when the program starts.
+
+Its second function is to communicate with the expansion port.
+The goal is to provide a mechanism for someone to add additional functionality to their emulator without making it completely incompatible.
+This we call the expansion card.
+The mechanism works as follows:
+If the expansion port is triggered with the *Sync* instruction, it writes out the full utility buffer through the virtual port, making it available for the expansion card to read. It is then replaced by $2^16$ new values provided by the expansion. From the programs perspective, this is an atomic operation. It triggers the mechanism with the *Sync* instruction and when it gets to run again, the whole buffer has been exchanged. This is supposed to model a transfer of data between the program and the virtual expansion card. 
+It should follow the following rules:
+- The data coming in can not depend on the data being flushed out this frame. It can be influenced by previous transfers, but it can not run computations during a transfer. 
+- The expansion card does not get access to any other information internal to the system (screen buffer, memory or instruction pointer). It can not manipulate these components either. 
+- It can not manipulate the utility buffer at any point where the mechanism was not explicitly activated.
+- It can not see or manipulate what is on the screen or what input is being passed to the system.
+- It can not change any rule of the emulation. 
+
+
+Synchronizations that are caused by exceeding the instruction limit never trigger the expansion mechanism. The expansion card can not know that such a synchronization happened. 
+
+
+If no expansion card is available, there is no answer when the exchange is triggered. As a result the utility buffer is simply cleared.
+
+Here are some examples of what an expansion card might do:
+- Play an audio sample. 
+- Provide keyboard or other text input. 
+- Perform some computation on the input and report back the result the next time it is activated. 
+- Access some emulated file system. 
+- Connect two SVC16 systems.
+
+The mechanism is intentionally designed to allow for emulators that mimic _swapping the expansion card at runtime_.
+The system itself has no mechanism to know with which expansion (if any) it is being emulated at any given time, so in addition to changing the expansion externally this change would need to be communicated to the program. 
+
 
 = Example Program 
 

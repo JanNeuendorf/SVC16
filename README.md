@@ -59,6 +59,8 @@ Here is a sketch of all components of the virtual computer:
 
 ![](specification/sketch.svg)
 
+The shaded section indicates what is visible to the virtual machine while the parts outside are handled by the emulation. 
+
 ### Instruction pointer
 
 The instruction pointer represents an address in main memory. It starts as zero. Then, it is manipulated by the instructions. All operations performed on the instruction pointer are wrapping.
@@ -135,11 +137,20 @@ When the instruction pointer advances, it does so by four positions.
 | 8      | **Deref** | yes        | `@arg2=@(@arg1+arg3)`                                                        |
 | 9      | **Ref**   | yes        | `@(@arg1+arg3)=@arg2`                                                        |
 | 10     | **Inst**  | yes        | `@arg1=inst_ptr`                                                             |
-| 11     | **Print** | yes        | Writes `color=@arg1` to `index=@arg2` of screen-buffer.                      |
-| 12     | **Read**  | yes        | Copies `index=@arg1` of screen-buffer to `@arg2`                             |
+| 11     | **Print** | yes        | Writes `value=@arg1` to `index=@arg2` of buffer `arg3`
+| 12     | **Read**  | yes        | Copies `index=@arg1` of buffer `arg3` to `@arg2`                             |
 | 13     | **Band**  | yes        | `@arg3=@arg1&@arg2`                                                          |
 | 14     | **Xor**   | yes        | `@arg3=@arg1^@arg2`                                                          |
-| 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order |
+| 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order. If arg3!=0, it triggers the expansion port mechanism. |
+
+When an argument refers to the name of a buffer, it means the screen buffer if it is 0 and the utility buffer otherwise.
+
+### Utility Buffer and Expansion
+
+The utility buffer behaves a lot like the screen buffer with the obvious difference that it is not drawn to the screen. This can be used for intermediate storage at runtime, but it always starts at zero.
+
+Its second function is to communicate with the expansion port. You can find more information in the specifications. 
+
 
 ### Constructing a Program
 
