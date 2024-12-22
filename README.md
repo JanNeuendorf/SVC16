@@ -1,14 +1,13 @@
-# The Simplest Virtual Computer (16 bit)
+# SVC16: A Simple Virtual Computer
 
 <div align="center">
 <img src="specification/logo_alpha.png" alt="Logo" width="200"/>
   </div>
 This is the specification for an extremely simple "virtual computer" that can be emulated.
 
-The goal in one word is **simplicity**. It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it.
+The goal in one word is **simplicity**. It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it. That does not mean that it is as simple and elegant as it could possibly be, just that it is easy to understand how the system should behave.  
 
 The instruction set and the design in general are in no way meant to resemble something that would make sense in real hardware.
-It is also not intended to be as simple and elegant as it could possibly be.  
 
 This repo contains an emulator to run games or programs. It can be installed with cargo:
 
@@ -78,7 +77,7 @@ The coordinate $(x,y)$ of the screen maps to the index $256y+x$ in the screen-bu
   </div>
   
 The only supported inputs are the mouse position and a list of eight keys. 
-These keys are supposed to represent the face buttons of a NES controller.
+These keys are supposed to represent the face buttons of an NES controller.
 The codes for the **A** and **B** keys also represent the left and right mouse buttons.
 
 On synchronization the new input is loaded into the input-buffer.
@@ -118,7 +117,7 @@ If the opcode is greater than 15, ***and the code is run***, the system will abo
 
 > [!NOTE]
 > You can have data blobs in the binary that does not correspond with the opcodes.
-> This is fine **until and unless** you extensively try to run this blob of data as code.
+> This is fine **until and unless** you explicitly try to run this blob of data as code.
 
 If one of the three arguments is not used, it can be set to any value, but it can not be omitted.
 
