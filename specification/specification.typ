@@ -1,4 +1,5 @@
 #import "@preview/colorful-boxes:1.4.0":slanted-colorbox
+#let version= "0.1.0"
 #let title= "SVC16: A Simple Virtual Computer"
 #set text(size: 8pt)
 #set page(
@@ -7,11 +8,7 @@ margin: (left:50pt,right:50pt,top:60pt,bottom:60pt),
 flipped: false,
 columns: 2,
 numbering: "- 1 -",
-foreground: rotate(24deg,
-  text(48pt, fill: rgb("#ff4e375f"))[
-    *WORK IN PROGRESS*
-  ]
-))
+header: align(right,[v #version])) 
 
 #let not-specified(txt) = slanted-colorbox(
   title: "Not specified",
@@ -19,6 +16,7 @@ foreground: rotate(24deg,
 )[#txt]
 
 #show link: underline
+#show figure: set block(breakable: true)
 #set heading(numbering:"1.1")
 #set table(inset:10pt,fill:rgb("#f5f5f5"),stroke:(paint:rgb("#000000"),thickness: 1pt))
 
@@ -36,7 +34,7 @@ We want to fully specify a very simple virtual computer that can be emulated.
 The goal is to recreate the feeling of writing games for a system with very tight hardware constraints without having to deal with the complicated reality of real retro systems. 
 It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it.
 The instruction set and the design in general are in no way meant to resemble something that would make sense in real hardware.
-It is also not intended to be as simple and elegant as it could possibly be. This might make it easier to explain but harder to develop for.
+It is also not intended to be as simple and elegant as it could possibly be. This might make it easier to emulate but harder to develop for.
 Since learning about assemblers and compilers is the point, we provide no guidelines on how to build the programs.
 
 == Reproducibility
@@ -50,8 +48,9 @@ An emulator can either run the system at the intended speed, or it can not.
 == Expandability
 
 This might seem at odds with the previous goal. 
-But if adding a new feature always requires changing the specification, that either means that supporting any new feature means breaking all compatibility, or it means that any expansions are ruled out forever. The compromise is that the behavior for the computer itself is fixed and we define an interface and rules for expansions that can be emulated together with the computer.
-The Idea is that it is always to know this specification and one specification (if any) for the expansion.
+But if adding a new feature always requires changing the specification, that either means that supporting any new feature means breaking all compatibility, or it means that any expansions are ruled out forever.
+The compromise is that the behavior for the computer itself is fixed and we define an interface and rules for expansions that can be emulated together with the computer.
+The Idea is that it is always enough to know this specification and one specification (if any) for the expansion.
 
 
 = General Principles
@@ -61,33 +60,43 @@ That includes numbers, addresses, colors, the instruction pointer and the input.
 Booleans are represented as `u16` values as well: 0 for `false` and >0 for `true`. 
 Whenever an instruction writes out a boolean explicitly, it is guaranteed to represented as the number 1.
 
-All numerical operations that will appear in the instructions are wrapping operations. 
-This includes manipulations of the instruction pointer.
+There are no registers, no built-in stack or special sections of memory. 
+Operations can be performed directly on arbitrary addresses.
+There is no separation between data and instructions.
 
-Division by zero crashes the program.
+All numerical operations that will appear in the instructions are wrapping operations. 
+This includes manipulations of the instruction pointer. Division by zero crashes the program.
 
 = The Simulated System
 #figure(
   image("sketch.svg", width: 90%),
-  caption: [A sketch of all components of the virtual computer.],
+  caption: [A sketch of all components of the virtual computer. The shaded area indicates what is visible to the simulation.],
 ) <sketch>
 
 As seen in @sketch, the addressable memory contains one value for each address.
-There is a separate screen buffer of the same size as the main memory.
+There is a separate screen buffer of the same size as the main memory and a third buffer that is of the same size as well. 
 The screen itself has a fixed resolution ($256 times 256$). 
 The instruction pointer is stored separately. 
 It always starts at zero. 
 
+Information is only transferred in and out of the simulated system when it is synchronized (see @synchronization).
+
 == Screen and Colors <screen>
 The color of each pixel is represented with 16-bits using `RGB565`.
+This means that a color code is given as $2^11*upright("red")+2^5*upright("green")+upright("blue")$, 
+where the color channels go from zero to 31 for red and blue and 63 for green.
+
 The coordinate $(x,y)$ of the screen maps to the index $256 y + x$ in the screen buffer.
-The coordinate $(0,0)$ is in the upper left-hand corner. Changes to the screen buffer are not reflected on the screen until the system is synchronized.
+The coordinate $(0,0)$ is in the upper left-hand corner. 
+
 
 #not-specified[
 - Colors do not have to be represented accurately (accessability options).
 - There is no rule for how scaling and aspect ratio might be handled.
 - It is not fixed what the screen shows before it is first synchronized.
-- A cursor can be shown on the window, as long as its position matches the mouse position passed to the system]
+- A cursor can be shown on the window, as long as its position matches the mouse position passed to the system
+- There might be a delay before the updated frame is shown on screen.
+  For example one might need to wait for _vsync_ or the window takes time to update.]
 
 == Input
 The only supported inputs are the mouse position and a list of eight keys. 
@@ -131,7 +140,7 @@ The bits in @inputs are supposed to indicate if a key is currently pressed (and 
 ]
 
 
-== Synchronization
+== Synchronization<synchronization>
 When the console executes the *Sync* instruction, the screen buffer is drawn to the screen.
 It is not cleared. The system will be put to sleep until the beginning of the next frame. 
 The targeted timing is 30fps. There is a hard limit of 3000000 instructions per frame. 
@@ -139,10 +148,7 @@ This means that if the Sync command has not been called for 3000000 instructions
 This can mean that an event (like a mouse click) is never handled.
 An alternative way to describe it is that the syncing happens automatically every frame and the instructions each take $frac(1,30*3000000)$ seconds.
 Then the *Sync* command just sleeps until the next frame starts. 
-#not-specified[
-There might be a delay before the updated frame is shown on screen.
-For example one might need to wait for _vsync_ or the window takes time to update.
-]
+
 
 
 = Instruction Set
@@ -216,9 +222,10 @@ There is intentionally no way of restarting or even quitting a program from with
 #not-specified[
   - There is no rule for how (or even if) the cause of the exception is reported.
   - It is not guaranteed that the emulator itself closes if an exception occurs. (So you can not use it to quit a program.)
+  - Expansions (see @expansion) might introduce new conditions for failure.
 ]
 
-= The Utility Buffer and the Expansion Port 
+= The Utility Buffer and the Expansion Port<expansion>
 
 The utility buffer behaves a lot like the screen buffer with the obvious difference that it is not drawn to the screen.
 This can be used for intermediate storage at runtime, but it is always initialized to be filled with zeros when the program starts.
@@ -252,6 +259,14 @@ The mechanism is intentionally designed to allow for emulators that mimic _swapp
 The system itself has no mechanism to know with which expansion (if any) it is being emulated at any given time, so in addition to changing the expansion externally this change would need to be communicated to the program. 
 
 
+= Miscellaneous
+Further information, examples and a reference emulator can be found at #link("https://github.com/JanNeuendorf/SVC16").
+Everything contained in this project is provided under the _MIT License_.
+Do with it whatever you want.
+
+One think we would ask is that if you distribute a modified version that is incompatible with the specifications,
+you make it clear that it has breaking changes. 
+
 = Example Program 
 
 #[
@@ -263,8 +278,10 @@ The system itself has no mechanism to know with which expansion (if any) it is b
   stroke: (paint: rgb("9e9e9e"),thickness: 2pt),
   text(fill: rgb("#000000"), it))
 
+While this is not needed for the specifications, it might be helpful to look at a very simple example. 
 
-A simple example would be to print all $2^16$ possible colors to the screen.
+
+Our goal could be to print all $2^16$ possible colors to the screen.
 We make our lives easier, by mapping each index of the screen buffer to the color which is encoded with the index.
 Here, we use the names of the opcodes instead of their numbers.
 
@@ -329,13 +346,6 @@ When we run this, we should see the output shown in @colors.
   image("colors_scaled.png", width: 40%),
   caption: [Output of the color example.],
 ) <colors>
-
+Can you figure why the program crashes if a button is pressed? How could this be fixed?
 ]
 
-= Miscellaneous
-Further information, examples and a reference emulator can be found at #link("https://github.com/JanNeuendorf/SVC16").
-Everything contained in this project is provided under the _MIT License_.
-Do with it whatever you want.
-
-One think we would ask is that if you distribute a modified version that is incompatible with the specifications,
-you make it clear that it has breaking changes. 
