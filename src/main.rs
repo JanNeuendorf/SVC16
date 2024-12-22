@@ -87,8 +87,11 @@ fn main() -> Result<()> {
             let engine_start = Instant::now();
             while !engine.wants_to_sync() && ipf <= cli.max_ipf && !paused {
                 match engine.step() {
-                    Err(_) => {
-                        handle_event_loop_error(&elwt, "Invalid operation");
+                    Err(e) => {
+                        handle_event_loop_error(
+                            &elwt,
+                            format!("{} (after {} instructions)", e, ipf),
+                        );
                         return;
                     }
                     _ => {}

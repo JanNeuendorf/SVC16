@@ -36,8 +36,8 @@ pub enum EngineError {
     #[error("Division by zero")]
     ZeroDivision,
 
-    #[error("Invalid instruction")]
-    InvalidInstruction,
+    #[error("Invalid instruction {0}")]
+    InvalidInstruction(u16),
 }
 
 impl Engine {
@@ -216,7 +216,7 @@ impl Engine {
                 }
                 self.advance_inst_ptr();
             }
-            _ => return Err(EngineError::InvalidInstruction),
+            _ => return Err(EngineError::InvalidInstruction(opcode)),
         }
         Ok(())
     }
