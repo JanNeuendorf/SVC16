@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use cli::Cli;
 use engine::Engine;
+#[cfg(feature = "gamepad")]
 use gilrs::Gilrs;
 use pixels::{Pixels, SurfaceTexture};
 use std::time::{Duration, Instant};
@@ -20,6 +21,7 @@ const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    #[cfg(feature = "gamepad")]
     let mut girls = Gilrs::new().expect("Could not read gamepad inputs.");
     let initial_state = read_u16s_from_file(&cli.program)?;
     // The initial state is cloned, so we keep it around for a restart.
@@ -27,6 +29,7 @@ fn main() -> Result<()> {
 
     let event_loop = EventLoop::new()?;
     let mut input = WinitInputHelper::new();
+    #[cfg(feature = "gamepad")]
     let mut gamepad = build_gamepad_map();
     if cli.scaling < 1 {
         return Err(anyhow!("The minimal scaling factor is 1"));
@@ -99,8 +102,12 @@ fn main() -> Result<()> {
                 ipf += 1;
             }
             let engine_elapsed = engine_start.elapsed();
+            #[cfg(not(feature = "gamepad"))]
+            let (c1, c2) = get_input_code(&input, &pixels);
+            #[cfg(feature = "gamepad")]
             gamepad.update_with_gilrs(&mut girls);
-            let (c1, c2) = get_input_code(&input, &gamepad, &pixels);
+            #[cfg(feature = "gamepad")]
+            let (c1, c2) = get_input_code_gamepad(&input, &gamepad, &pixels);
             engine.perform_sync(c1, c2, &mut raw_buffer);
             update_image_buffer(pixels.frame_mut(), &raw_buffer);
 

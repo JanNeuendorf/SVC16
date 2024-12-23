@@ -15,6 +15,9 @@ This repo contains an emulator to run games or programs. It can be installed wit
 cargo install --git https://github.com/JanNeuendorf/SVC16
 ```
 
+> [!NOTE]
+> For controller support, compile with `--features="gamepad"`. Support varies by platform and it might require additional libraries to be installed. 
+
 You can then run a program from the cli:
 
 ```sh

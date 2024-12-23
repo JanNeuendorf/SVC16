@@ -1,16 +1,17 @@
 use crate::RES;
 use anyhow::Result;
 use pixels::Pixels;
-use std::hash::Hash;
 use winit::{
     event::MouseButton,
     event_loop::EventLoopWindowTarget,
     keyboard::{Key, KeyCode},
 };
 use winit_input_helper::WinitInputHelper;
+#[cfg(feature = "gamepad")]
 use winit_input_map::{input_map, GamepadButton, InputMap};
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+#[cfg(feature = "gamepad")]
+#[derive(Debug, std::hash::Hash, PartialEq, Eq, Clone, Copy)]
 pub enum NesInput {
     Up,
     Down,
@@ -22,6 +23,7 @@ pub enum NesInput {
     Select,
 }
 
+#[cfg(feature = "gamepad")]
 pub fn build_gamepad_map() -> InputMap<NesInput> {
     input_map!(
         (NesInput::A, GamepadButton::East),
@@ -67,8 +69,8 @@ pub fn update_image_buffer(imbuff: &mut [u8], screen: &[u16; RES * RES]) {
         *imbuff.get_mut(4 * i + 3).expect("Error with image buffer") = 255;
     }
 }
-
-pub fn get_input_code(
+#[cfg(feature = "gamepad")]
+pub fn get_input_code_gamepad(
     input: &WinitInputHelper,
     gamepad: &InputMap<NesInput>,
     pxls: &Pixels,
@@ -128,4 +130,40 @@ pub fn get_input_code(
 pub fn handle_event_loop_error(handle: &EventLoopWindowTarget<()>, msg: impl AsRef<str>) {
     eprintln!("{}", msg.as_ref());
     handle.exit();
+}
+
+#[cfg(not(feature = "gamepad"))]
+pub fn get_input_code(input: &WinitInputHelper, pxls: &Pixels) -> (u16, u16) {
+    let raw_mp = input.cursor().unwrap_or((0., 0.));
+    let mp = match pxls.window_pos_to_pixel(raw_mp) {
+        Ok(p) => p,
+        Err(ev) => pxls.clamp_pixel_pos(ev),
+    };
+    let pos_code = (mp.1 as u16 * 256) + mp.0 as u16;
+    let mut key_code = 0_u16;
+    if input.key_held(KeyCode::Space) || input.mouse_held(MouseButton::Left) {
+        key_code += 1;
+    }
+    if input.key_held_logical(Key::Character("b")) || input.mouse_held(MouseButton::Right) {
+        key_code += 2;
+    }
+    if input.key_held_logical(Key::Character("w")) || input.key_held(KeyCode::ArrowUp) {
+        key_code += 4;
+    }
+    if input.key_held_logical(Key::Character("s")) || input.key_held(KeyCode::ArrowDown) {
+        key_code += 8;
+    }
+    if input.key_held_logical(Key::Character("a")) || input.key_held(KeyCode::ArrowLeft) {
+        key_code += 16;
+    }
+    if input.key_held_logical(Key::Character("d")) || input.key_held(KeyCode::ArrowRight) {
+        key_code += 32;
+    }
+    if input.key_held_logical(Key::Character("n")) {
+        key_code += 64;
+    }
+    if input.key_held_logical(Key::Character("m")) {
+        key_code += 128;
+    }
+    (pos_code, key_code)
 }
