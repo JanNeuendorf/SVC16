@@ -1,6 +1,6 @@
 [package]
 name = "svc16"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
 authors = ["Jan Neuendorf"]
 description = "An emulator for a simple virtual computer"
@@ -18,4 +18,5 @@ winit-input-map = {version="0.4.1",optional=true}
 winit_input_helper = "0.16.0"
 
 [features]
+default=[]
 gamepad = ["gilrs","winit-input-map"]

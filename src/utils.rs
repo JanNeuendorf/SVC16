@@ -8,7 +8,7 @@ use winit::{
 };
 use winit_input_helper::WinitInputHelper;
 #[cfg(feature = "gamepad")]
-use winit_input_map::{input_map, GamepadButton, InputMap};
+use winit_input_map::{input_map, GamepadAxis, GamepadButton, InputCode, InputMap};
 
 #[cfg(feature = "gamepad")]
 #[derive(Debug, std::hash::Hash, PartialEq, Eq, Clone, Copy)]
@@ -30,10 +30,26 @@ pub fn build_gamepad_map() -> InputMap<NesInput> {
         (NesInput::B, GamepadButton::South),
         (NesInput::Select, GamepadButton::Select),
         (NesInput::Start, GamepadButton::Start),
-        (NesInput::Up, GamepadButton::DPadUp),
-        (NesInput::Down, GamepadButton::DPadDown),
-        (NesInput::Left, GamepadButton::DPadLeft),
-        (NesInput::Right, GamepadButton::DPadRight)
+        (
+            NesInput::Up,
+            GamepadButton::DPadUp,
+            InputCode::gamepad_axis_pos(GamepadAxis::LeftStickY)
+        ),
+        (
+            NesInput::Down,
+            GamepadButton::DPadDown,
+            InputCode::gamepad_axis_neg(GamepadAxis::LeftStickY)
+        ),
+        (
+            NesInput::Left,
+            GamepadButton::DPadLeft,
+            InputCode::gamepad_axis_neg(GamepadAxis::LeftStickX)
+        ),
+        (
+            NesInput::Right,
+            GamepadButton::DPadRight,
+            InputCode::gamepad_axis_pos(GamepadAxis::LeftStickX)
+        )
     )
 }
 
