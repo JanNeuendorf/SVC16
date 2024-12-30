@@ -1,5 +1,5 @@
 #import "@preview/colorful-boxes:1.4.0":slanted-colorbox
-#let version= "0.1.0"
+#let version=sys.inputs.at(default:"??.??.??","semver")
 #let title= "SVC16: A Simple Virtual Computer"
 #set text(size: 8pt)
 #set page(
