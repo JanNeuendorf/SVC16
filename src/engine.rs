@@ -33,8 +33,8 @@ pub struct Engine {
 
 #[derive(Debug, Error)]
 pub enum EngineError {
-    #[error("Division by zero")]
-    ZeroDivision,
+    #[error("Division by zero {0}/0")]
+    ZeroDivision(u16),
 
     #[error("Invalid instruction {0}")]
     InvalidInstruction(u16),
@@ -152,7 +152,8 @@ impl Engine {
             }
             DIV => {
                 if self.get(arg2) == 0 {
-                    return Err(EngineError::ZeroDivision);
+                    let numerator = self.get(arg1);
+                    return Err(EngineError::ZeroDivision(numerator));
                 } else {
                     self.set(arg3, self.get(arg1).wrapping_div(self.get(arg2)));
                     self.advance_inst_ptr();
