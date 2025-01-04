@@ -1,138 +1,94 @@
 mod cli;
 mod engine;
+mod ui;
 mod utils;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::Parser;
 use cli::Cli;
 use engine::Engine;
 #[cfg(feature = "gamepad")]
 use gilrs::Gilrs;
-use pixels::{Pixels, SurfaceTexture};
+use macroquad::prelude::*;
 use std::time::{Duration, Instant};
+use ui::Layout;
 use utils::*;
-use winit::dpi::LogicalSize;
-use winit::event_loop::EventLoop;
-use winit::keyboard::{Key, KeyCode};
-use winit::window::WindowBuilder;
-use winit_input_helper::WinitInputHelper;
-const RES: usize = 256;
+const MAX_IPF: usize = 3000000;
 const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
-fn main() -> Result<()> {
+fn window_conf() -> Conf {
     let cli = Cli::parse();
-    #[cfg(feature = "gamepad")]
-    let mut girls = Gilrs::new().expect("Could not read gamepad inputs.");
+
+    Conf {
+        window_title: "SVC16".to_owned(),
+        window_width: 512 * cli.scaling,
+        window_height: 512 * cli.scaling,
+        fullscreen: cli.fullscreen,
+
+        ..Default::default()
+    }
+}
+#[macroquad::main(window_conf)]
+async fn main() -> Result<()> {
+    let cli = Cli::parse();
+    show_mouse(cli.cursor);
+
+    let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
+    let texture = Texture2D::from_image(&Image::gen_image_color(256, 256, BLACK));
+    texture.set_filter(FilterMode::Nearest);
+
+    let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));
+    let mut raw_buffer = [0 as u16; 256 * 256];
     let initial_state = read_u16s_from_file(&cli.program)?;
-    // The initial state is cloned, so we keep it around for a restart.
     let mut engine = Engine::new(initial_state.clone());
-
-    let event_loop = EventLoop::new()?;
-    let mut input = WinitInputHelper::new();
-    #[cfg(feature = "gamepad")]
-    let mut gamepad = build_gamepad_map();
-    if cli.scaling < 1 {
-        return Err(anyhow!("The minimal scaling factor is 1"));
-    }
-    let window = {
-        let size = LogicalSize::new(
-            (RES as u32 * cli.scaling) as f64,
-            (RES as u32 * cli.scaling) as f64,
-        );
-        let min_size = LogicalSize::new((RES) as f64, (RES) as f64);
-        WindowBuilder::new()
-            .with_title("SVC16")
-            .with_inner_size(size)
-            .with_min_inner_size(min_size)
-            .build(&event_loop)?
-    };
-    window.set_cursor_visible(cli.cursor);
-    if cli.fullscreen {
-        window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
-    }
-    let mut pixels = {
-        let window_size = window.inner_size();
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(RES as u32, RES as u32, surface_texture)?
-    };
-
-    let mut raw_buffer = [0 as u16; engine::MEMSIZE];
     let mut paused = false;
 
-    event_loop.run(|event, elwt| {
+    loop {
         let start_time = Instant::now();
-        if input.update(&event) {
-            if input.key_pressed(KeyCode::Escape) || input.close_requested() {
-                elwt.exit();
-                return;
-            }
-            if input.key_pressed_logical(Key::Character("p")) {
-                paused = !paused;
-                if paused {
-                    window.set_title("SVC16 (paused)");
-                } else {
-                    window.set_title("SVC16");
-                }
-            }
-            if input.key_pressed_logical(Key::Character("r")) {
-                engine = Engine::new(initial_state.clone());
-                paused = false;
-            }
-
-            if let Some(size) = input.window_resized() {
-                if let Err(_) = pixels.resize_surface(size.width, size.height) {
-                    handle_event_loop_error(&elwt, "Resize error");
-                    return;
-                }
-            }
-
-            let mut ipf = 0;
-            let engine_start = Instant::now();
-            while !engine.wants_to_sync() && ipf <= cli.max_ipf && !paused {
-                match engine.step() {
-                    Err(e) => {
-                        handle_event_loop_error(
-                            &elwt,
-                            format!("{} (after {} instructions)", e, ipf),
-                        );
-                        return;
-                    }
-                    _ => {}
-                }
-                ipf += 1;
-            }
-            let engine_elapsed = engine_start.elapsed();
-            #[cfg(not(feature = "gamepad"))]
-            let (c1, c2) = get_input_code(&input, &pixels);
-            #[cfg(feature = "gamepad")]
-            gamepad.update_with_gilrs(&mut girls);
-            #[cfg(feature = "gamepad")]
-            let (c1, c2) = get_input_code_gamepad(&input, &gamepad, &pixels);
-            engine.perform_sync(c1, c2, &mut raw_buffer);
-            update_image_buffer(pixels.frame_mut(), &raw_buffer);
-
-            let elapsed = start_time.elapsed();
-            if cli.verbose {
-                println!(
-                    "Instructions: {} Frametime: {}ms (Engine only: {}ms)",
-                    ipf,
-                    elapsed.as_millis(),
-                    engine_elapsed.as_millis()
-                );
-            }
-            if elapsed < FRAMETIME {
-                std::thread::sleep(FRAMETIME - elapsed);
-            }
-            window.request_redraw();
-            match pixels.render() {
-                Err(_) => {
-                    handle_event_loop_error(&elwt, "Rendering error");
-                    return;
-                }
-                _ => {}
-            };
+        if is_key_pressed(KeyCode::Escape) {
+            break;
         }
-    })?;
+        if is_key_pressed(KeyCode::P) {
+            paused = !paused;
+        }
+        if is_key_pressed(KeyCode::R) {
+            engine = Engine::new(initial_state.clone());
+            paused = false;
+        }
 
+        let mut ipf = 0;
+        let engine_start = Instant::now();
+        while !engine.wants_to_sync() && ipf <= MAX_IPF && !paused {
+            engine.step()?;
+            ipf += 1;
+        }
+
+        let _engine_elapsed = engine_start.elapsed();
+        let (mpos, keycode) = get_input_code();
+        engine.perform_sync(mpos, keycode, &mut raw_buffer);
+        update_image_buffer(&mut buffer, &raw_buffer);
+        image.update(&buffer);
+        texture.update(&image);
+        clear_background(BLACK);
+        let layout = Layout::generate();
+        draw_texture_ex(
+            &texture,
+            layout.x,
+            layout.y,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(layout.size, layout.size)),
+
+                ..Default::default()
+            },
+        );
+
+        // Wait for the next frame
+        let elapsed = start_time.elapsed();
+        if elapsed < FRAMETIME {
+            std::thread::sleep(FRAMETIME - elapsed);
+        }
+        next_frame().await;
+    }
     Ok(())
 }

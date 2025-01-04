@@ -7,7 +7,7 @@ pub struct Cli {
     pub program: String,
 
     #[arg(short, long, default_value = "1", help = "Set initial window scaling")]
-    pub scaling: u32,
+    pub scaling: i32,
 
     #[arg(
         short,
@@ -30,11 +30,4 @@ pub struct Cli {
         help = "Output performance metrics"
     )]
     pub verbose: bool,
-    #[arg(
-        short,
-        long,
-        default_value = "3000000",
-        help = "Change the maximum instructions per frame"
-    )]
-    pub max_ipf: usize,
 }
