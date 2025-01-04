@@ -2,8 +2,8 @@ mod cli;
 mod engine;
 mod ui;
 mod utils;
-
-use anyhow::Result;
+#[allow(unused)]
+use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use cli::Cli;
 use engine::Engine;
@@ -31,7 +31,6 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    // show_mouse(cli.cursor);
 
     let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
     let texture = Texture2D::from_image(&Image::gen_image_color(256, 256, BLACK));
@@ -42,6 +41,11 @@ async fn main() -> Result<()> {
     let initial_state = read_u16s_from_file(&cli.program)?;
     let mut engine = Engine::new(initial_state.clone());
     let mut paused = false;
+    #[cfg(feature = "gamepad")]
+    let mut gilrs = match Gilrs::new() {
+        Ok(g) => g,
+        _ => return Err(anyhow!("Gamepad could not be loaded")),
+    };
 
     loop {
         let start_time = Instant::now();
@@ -62,9 +66,16 @@ async fn main() -> Result<()> {
             engine.step()?;
             ipf += 1;
         }
+        #[cfg(feature = "gamepad")]
+        while let Some(event) = gilrs.next_event() {
+            gilrs.update(&event);
+        }
 
         let _engine_elapsed = engine_start.elapsed();
-        let (mpos, keycode) = get_input_code();
+        #[cfg(not(feature = "gamepad"))]
+        let (mpos, keycode) = get_input_code_no_gamepad();
+        #[cfg(feature = "gamepad")]
+        let (mpos, keycode) = get_input_code_gamepad(&gilrs);
         engine.perform_sync(mpos, keycode, &mut raw_buffer);
         update_image_buffer(&mut buffer, &raw_buffer);
         image.update(&buffer);
