@@ -1,6 +1,10 @@
+use std::io::Read;
+
 use crate::RES;
 use anyhow::Result;
+use flate2::read::GzDecoder;
 use pixels::Pixels;
+use std::fs::File;
 use winit::{
     event::MouseButton,
     event_loop::EventLoopWindowTarget,
@@ -54,9 +58,15 @@ pub fn build_gamepad_map() -> InputMap<NesInput> {
 }
 
 pub fn read_u16s_from_file(file_path: &str) -> Result<Vec<u16>> {
-    use std::io::{BufReader, Read};
-    let file = std::fs::File::open(file_path)?;
-    let mut reader = BufReader::new(file);
+    let mut file = File::open(file_path)?;
+    if file_path.ends_with(".gz") {
+        read_u16s_to_buffer(&mut GzDecoder::new(file))
+    } else {
+        read_u16s_to_buffer(&mut file)
+    }
+}
+
+fn read_u16s_to_buffer<T: Read>(reader: &mut T) -> Result<Vec<u16>> {
     let mut buffer = [0u8; 2];
     let mut u16s = Vec::new();
     while reader.read_exact(&mut buffer).is_ok() {

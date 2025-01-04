@@ -3,6 +3,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
+    #[arg(help = "(Decompressed if it ends in .gz)")]
     pub program: String,
 
     #[arg(short, long, default_value = "1", help = "Set initial window scaling")]
