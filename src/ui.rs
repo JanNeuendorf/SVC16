@@ -15,13 +15,27 @@ impl Layout {
         let clamped_y = (raw_y.clamp(self.y, self.y + self.size) - self.y) / self.size * 255.;
         (clamped_x, clamped_y)
     }
+    pub fn cursor_in_window(&self) -> bool {
+        let mp = mouse_position();
+        mp.0 >= self.x
+            && mp.0 < (self.x + self.size)
+            && mp.1 >= self.y
+            && mp.1 < (self.y + self.size)
+    }
 }
 
 fn place(width: f32, height: f32) -> (f32, f32, f32) {
     let minsize = width.min(height);
-    let power_two = minsize.log2().floor() as u32;
-    let image_size = (2 as usize).pow(power_two) as f32;
-    let startx = (width - image_size) / 2.;
-    let starty = (height - image_size) / 2.;
-    (startx, starty, image_size)
+    if minsize >= 256. {
+        let image_size = (minsize / 256.).floor() * 256.;
+        let startx = (width - image_size) / 2.;
+        let starty = (height - image_size) / 2.;
+        return (startx, starty, image_size);
+    } else {
+        let power_two = minsize.log2().floor() as u32;
+        let image_size = (2 as usize).pow(power_two) as f32;
+        let startx = (width - image_size) / 2.;
+        let starty = (height - image_size) / 2.;
+        (startx, starty, image_size)
+    }
 }

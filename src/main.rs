@@ -21,8 +21,8 @@ fn window_conf() -> Conf {
 
     Conf {
         window_title: "SVC16".to_owned(),
-        window_width: 512 * cli.scaling,
-        window_height: 512 * cli.scaling,
+        window_width: 256 * cli.scaling,
+        window_height: 256 * cli.scaling,
         fullscreen: cli.fullscreen,
 
         ..Default::default()
@@ -31,7 +31,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    show_mouse(cli.cursor);
+    // show_mouse(cli.cursor);
 
     let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
     let texture = Texture2D::from_image(&Image::gen_image_color(256, 256, BLACK));
@@ -71,6 +71,12 @@ async fn main() -> Result<()> {
         texture.update(&image);
         clear_background(BLACK);
         let layout = Layout::generate();
+        if layout.cursor_in_window() {
+            show_mouse(cli.cursor);
+        } else {
+            show_mouse(true);
+        }
+
         draw_texture_ex(
             &texture,
             layout.x,
