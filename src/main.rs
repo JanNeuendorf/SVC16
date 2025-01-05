@@ -73,6 +73,7 @@ async fn main() -> Result<()> {
             cli.cursor = !cli.cursor;
         }
 
+        let layout = Layout::generate(cli.linear_filtering);
         if !paused {
             ipf = 0;
             while !engine.wants_to_sync() && ipf <= MAX_IPF {
@@ -85,10 +86,10 @@ async fn main() -> Result<()> {
                 gilrs.update(&event);
             }
             #[cfg(not(feature = "gamepad"))]
-            let (mpos, keycode) = get_input_code_no_gamepad();
+            let (mpos, keycode) = get_input_code_no_gamepad(&layout);
 
             #[cfg(feature = "gamepad")]
-            let (mpos, keycode) = get_input_code_gamepad(&gilrs);
+            let (mpos, keycode) = get_input_code_gamepad(&layout, &gilrs);
 
             engine.perform_sync(mpos, keycode, &mut raw_buffer);
             update_image_buffer(&mut buffer, &raw_buffer);
@@ -96,7 +97,6 @@ async fn main() -> Result<()> {
             texture.update(&image);
         }
         clear_background(BLACK);
-        let layout = Layout::generate();
 
         if layout.cursor_in_window() {
             show_mouse(cli.cursor);

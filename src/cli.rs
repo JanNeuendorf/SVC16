@@ -34,7 +34,7 @@ pub struct Cli {
         long,
         short,
         default_value_t = false,
-        help = "Use linear filtering (instead of pixel-perfect)"
+        help = "Use linear filtering (instead of pixel-perfect) this enables fractional scaling"
     )]
     pub linear_filtering: bool,
 }

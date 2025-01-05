@@ -10,10 +10,13 @@ pub struct Layout {
     pub font_size: f32,
 }
 impl Layout {
-    pub fn generate() -> Self {
+    pub fn generate(linear: bool) -> Self {
         let (width, height) = (screen_width(), screen_height());
         let minsize = width.min(height);
-        let image_size = ((minsize / 256.).floor() * 256.).max(256.);
+        let image_size = match linear {
+            false => ((minsize / 256.).floor() * 256.).max(256.),
+            true => minsize.max(256.),
+        };
         let x = (0. as f32).max((width - image_size) / 2.);
         let y = (0. as f32).max((height - image_size) / 2.);
         let font_y = y + image_size / 15.;

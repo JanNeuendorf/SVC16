@@ -52,14 +52,14 @@ pub fn update_image_buffer(imbuff: &mut [Color; RES * RES], screen: &[u16; RES *
 }
 
 #[cfg(feature = "gamepad")]
-pub fn get_input_code_gamepad(gilrs: &Gilrs) -> (u16, u16) {
+pub fn get_input_code_gamepad(layout: &Layout, gilrs: &Gilrs) -> (u16, u16) {
     #[cfg(not(feature = "gamepad"))]
     return get_input_code_no_gamepad();
     let mut key_code = 0_u16;
-    let mp = Layout::generate().clamp_mouse();
+    let mp = layout.clamp_mouse();
     let pos_code = (mp.1 as u16 * 256) + mp.0 as u16;
     let Some(gamepad) = gilrs.gamepads().next().map(|t| t.1) else {
-        return get_input_code_no_gamepad();
+        return get_input_code_no_gamepad(layout);
     };
     let tol = 0.5;
     let axis_horizontal = gamepad
@@ -120,10 +120,8 @@ pub fn get_input_code_gamepad(gilrs: &Gilrs) -> (u16, u16) {
     (pos_code, key_code)
 }
 
-pub fn get_input_code_no_gamepad() -> (u16, u16) {
-    use crate::ui::Layout;
-
-    let mp = Layout::generate().clamp_mouse();
+pub fn get_input_code_no_gamepad(layout: &Layout) -> (u16, u16) {
+    let mp = layout.clamp_mouse();
 
     let pos_code = (mp.1 as u16 * 256) + mp.0 as u16;
     let mut key_code = 0_u16;
