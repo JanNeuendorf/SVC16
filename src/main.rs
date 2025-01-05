@@ -18,6 +18,7 @@ const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
 fn window_conf() -> Conf {
     let cli = Cli::parse();
+    if cli.fullscreen {}
 
     Conf {
         window_title: "SVC16".to_owned(),
@@ -30,17 +31,22 @@ fn window_conf() -> Conf {
 }
 #[macroquad::main(window_conf)]
 async fn main() -> Result<()> {
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
 
     let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
     let texture = Texture2D::from_image(&Image::gen_image_color(256, 256, BLACK));
-    texture.set_filter(FilterMode::Nearest);
+    if cli.linear_filtering {
+        texture.set_filter(FilterMode::Linear);
+    } else {
+        texture.set_filter(FilterMode::Nearest);
+    }
 
     let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));
     let mut raw_buffer = [0 as u16; 256 * 256];
     let initial_state = read_u16s_from_file(&cli.program)?;
     let mut engine = Engine::new(initial_state.clone());
     let mut paused = false;
+    let mut ipf = 0;
     #[cfg(feature = "gamepad")]
     let mut gilrs = match Gilrs::new() {
         Ok(g) => g,
@@ -59,29 +65,38 @@ async fn main() -> Result<()> {
             engine = Engine::new(initial_state.clone());
             paused = false;
         }
-
-        let mut ipf = 0;
-        let engine_start = Instant::now();
-        while !engine.wants_to_sync() && ipf <= MAX_IPF && !paused {
-            engine.step()?;
-            ipf += 1;
+        if is_key_pressed(KeyCode::V) {
+            cli.verbose = !cli.verbose;
         }
-        #[cfg(feature = "gamepad")]
-        while let Some(event) = gilrs.next_event() {
-            gilrs.update(&event);
+        if is_key_pressed(KeyCode::C) {
+            cli.cursor = !cli.cursor;
         }
 
-        let _engine_elapsed = engine_start.elapsed();
-        #[cfg(not(feature = "gamepad"))]
-        let (mpos, keycode) = get_input_code_no_gamepad();
-        #[cfg(feature = "gamepad")]
-        let (mpos, keycode) = get_input_code_gamepad(&gilrs);
-        engine.perform_sync(mpos, keycode, &mut raw_buffer);
-        update_image_buffer(&mut buffer, &raw_buffer);
-        image.update(&buffer);
-        texture.update(&image);
+        if !paused {
+            ipf = 0;
+            let engine_start = Instant::now();
+            while !engine.wants_to_sync() && ipf <= MAX_IPF {
+                engine.step()?;
+                ipf += 1;
+            }
+            #[cfg(feature = "gamepad")]
+            while let Some(event) = gilrs.next_event() {
+                gilrs.update(&event);
+            }
+
+            let _engine_elapsed = engine_start.elapsed();
+            #[cfg(not(feature = "gamepad"))]
+            let (mpos, keycode) = get_input_code_no_gamepad();
+            #[cfg(feature = "gamepad")]
+            let (mpos, keycode) = get_input_code_gamepad(&gilrs);
+            engine.perform_sync(mpos, keycode, &mut raw_buffer);
+            update_image_buffer(&mut buffer, &raw_buffer);
+            image.update(&buffer);
+            texture.update(&image);
+        }
         clear_background(BLACK);
         let layout = Layout::generate();
+
         if layout.cursor_in_window() {
             show_mouse(cli.cursor);
         } else {
@@ -99,11 +114,32 @@ async fn main() -> Result<()> {
                 ..Default::default()
             },
         );
+        if cli.verbose {
+            draw_rectangle(
+                layout.x + 0.005 * layout.size,
+                layout.y + 0.01 * layout.size,
+                0.25 * layout.size,
+                layout.font_size,
+                Color::from_rgba(0, 0, 0, 200),
+            );
+
+            draw_text(
+                &format!("{}", ipf),
+                layout.x + 0.01 * layout.size,
+                layout.font_y,
+                layout.font_size,
+                LIME,
+            );
+        }
 
         // Wait for the next frame
         let elapsed = start_time.elapsed();
         if elapsed < FRAMETIME {
             std::thread::sleep(FRAMETIME - elapsed);
+        } else {
+            if cli.verbose {
+                println!("Frame was not processed in time");
+            }
         }
         next_frame().await;
     }

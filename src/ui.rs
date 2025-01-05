@@ -3,11 +3,24 @@ pub struct Layout {
     pub x: f32,
     pub y: f32,
     pub size: f32,
+    pub font_y: f32,
+    pub font_size: f32,
 }
 impl Layout {
     pub fn generate() -> Self {
-        let (x, y, size) = place(screen_width(), screen_height());
-        Self { x, y, size }
+        let (width, height) = (screen_width(), screen_height());
+        let minsize = width.min(height);
+        let image_size = ((minsize / 256.).floor() * 256.).max(256.);
+        let x = (0. as f32).max((width - image_size) / 2.);
+        let y = (0. as f32).max((height - image_size) / 2.);
+        let font_y = y + image_size / 15.;
+        Self {
+            x,
+            y,
+            size: image_size,
+            font_y,
+            font_size: image_size / 15.,
+        }
     }
     pub fn clamp_mouse(&self) -> (f32, f32) {
         let (raw_x, raw_y) = mouse_position();
@@ -21,21 +34,5 @@ impl Layout {
             && mp.0 < (self.x + self.size)
             && mp.1 >= self.y
             && mp.1 < (self.y + self.size)
-    }
-}
-
-fn place(width: f32, height: f32) -> (f32, f32, f32) {
-    let minsize = width.min(height);
-    if minsize >= 256. {
-        let image_size = (minsize / 256.).floor() * 256.;
-        let startx = (width - image_size) / 2.;
-        let starty = (height - image_size) / 2.;
-        return (startx, starty, image_size);
-    } else {
-        let power_two = minsize.log2().floor() as u32;
-        let image_size = (2 as usize).pow(power_two) as f32;
-        let startx = (width - image_size) / 2.;
-        let starty = (height - image_size) / 2.;
-        (startx, starty, image_size)
     }
 }

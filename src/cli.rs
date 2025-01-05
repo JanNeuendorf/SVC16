@@ -1,4 +1,5 @@
 use clap::Parser;
+use macroquad::texture::FilterMode;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -30,4 +31,6 @@ pub struct Cli {
         help = "Output performance metrics"
     )]
     pub verbose: bool,
+    #[arg(long, short, default_value_t = false, help = "Filter")]
+    pub linear_filtering: bool,
 }
