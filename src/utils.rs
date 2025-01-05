@@ -1,61 +1,14 @@
-use std::io::Read;
-
-use crate::RES;
+#[allow(unused)]
+use crate::ui::Layout;
 use anyhow::Result;
 use flate2::read::GzDecoder;
-use pixels::Pixels;
+use macroquad::color::Color;
+use macroquad::prelude::*;
 use std::fs::File;
-use winit::{
-    event::MouseButton,
-    event_loop::EventLoopWindowTarget,
-    keyboard::{Key, KeyCode},
-};
-use winit_input_helper::WinitInputHelper;
+use std::io::Read;
+const RES: usize = 256;
 #[cfg(feature = "gamepad")]
-use winit_input_map::{input_map, GamepadAxis, GamepadButton, InputCode, InputMap};
-
-#[cfg(feature = "gamepad")]
-#[derive(Debug, std::hash::Hash, PartialEq, Eq, Clone, Copy)]
-pub enum NesInput {
-    Up,
-    Down,
-    Left,
-    Right,
-    A,
-    B,
-    Start,
-    Select,
-}
-
-#[cfg(feature = "gamepad")]
-pub fn build_gamepad_map() -> InputMap<NesInput> {
-    input_map!(
-        (NesInput::A, GamepadButton::East),
-        (NesInput::B, GamepadButton::South),
-        (NesInput::Select, GamepadButton::Select),
-        (NesInput::Start, GamepadButton::Start),
-        (
-            NesInput::Up,
-            GamepadButton::DPadUp,
-            InputCode::gamepad_axis_pos(GamepadAxis::LeftStickY)
-        ),
-        (
-            NesInput::Down,
-            GamepadButton::DPadDown,
-            InputCode::gamepad_axis_neg(GamepadAxis::LeftStickY)
-        ),
-        (
-            NesInput::Left,
-            GamepadButton::DPadLeft,
-            InputCode::gamepad_axis_neg(GamepadAxis::LeftStickX)
-        ),
-        (
-            NesInput::Right,
-            GamepadButton::DPadRight,
-            InputCode::gamepad_axis_pos(GamepadAxis::LeftStickX)
-        )
-    )
-}
+use gilrs::{Axis, Button, Gilrs};
 
 pub fn read_u16s_from_file(file_path: &str) -> Result<Vec<u16>> {
     let mut file = File::open(file_path)?;
@@ -86,110 +39,116 @@ fn rgb565_to_argb(rgb565: u16) -> (u8, u8, u8) {
     (r, g, b)
 }
 
-pub fn update_image_buffer(imbuff: &mut [u8], screen: &[u16; RES * RES]) {
+pub fn update_image_buffer(imbuff: &mut [Color; RES * RES], screen: &[u16; RES * RES]) {
     for i in 0..RES * RES {
         let col = rgb565_to_argb(screen[i]);
-        *imbuff.get_mut(4 * i).expect("Error with image buffer") = col.0;
-        *imbuff.get_mut(4 * i + 1).expect("Error with image buffer") = col.1;
-        *imbuff.get_mut(4 * i + 2).expect("Error with image buffer") = col.2;
-        *imbuff.get_mut(4 * i + 3).expect("Error with image buffer") = 255;
+        imbuff[i] = Color {
+            r: col.0 as f32 / 255.,
+            g: col.1 as f32 / 255.,
+            b: col.2 as f32 / 255.,
+            a: 1.,
+        }
     }
 }
+
 #[cfg(feature = "gamepad")]
-pub fn get_input_code_gamepad(
-    input: &WinitInputHelper,
-    gamepad: &InputMap<NesInput>,
-    pxls: &Pixels,
-) -> (u16, u16) {
-    let raw_mp = input.cursor().unwrap_or((0., 0.));
-    let mp = match pxls.window_pos_to_pixel(raw_mp) {
-        Ok(p) => p,
-        Err(ev) => pxls.clamp_pixel_pos(ev),
-    };
-    let pos_code = (mp.1 as u16 * 256) + mp.0 as u16;
+pub fn get_input_code_gamepad(layout: &Layout, gilrs: &Gilrs) -> (u16, u16) {
+    #[cfg(not(feature = "gamepad"))]
+    return get_input_code_no_gamepad();
     let mut key_code = 0_u16;
-    if input.key_held(KeyCode::Space)
-        || input.mouse_held(MouseButton::Left)
-        || gamepad.pressing(NesInput::A)
+    let mp = layout.clamp_mouse();
+    let pos_code = (mp.1 as u16 * 256) + mp.0 as u16;
+    let Some(gamepad) = gilrs.gamepads().next().map(|t| t.1) else {
+        return get_input_code_no_gamepad(layout);
+    };
+    let tol = 0.5;
+    let axis_horizontal = gamepad
+        .axis_data(Axis::LeftStickX)
+        .map(|a| a.value())
+        .unwrap_or(0.);
+    let axis_vertical = gamepad
+        .axis_data(Axis::LeftStickY)
+        .map(|a| a.value())
+        .unwrap_or(0.);
+    if is_key_down(KeyCode::Space)
+        || is_mouse_button_down(MouseButton::Left)
+        || gamepad.is_pressed(Button::East)
     {
         key_code += 1;
     }
-    if input.key_held_logical(Key::Character("b"))
-        || input.mouse_held(MouseButton::Right)
-        || gamepad.pressing(NesInput::B)
+    if is_key_down(KeyCode::B)
+        || is_mouse_button_down(MouseButton::Right)
+        || gamepad.is_pressed(Button::South)
     {
         key_code += 2;
     }
-    if input.key_held_logical(Key::Character("w"))
-        || input.key_held(KeyCode::ArrowUp)
-        || gamepad.pressing(NesInput::Up)
+    if is_key_down(KeyCode::W)
+        || is_key_down(KeyCode::Up)
+        || gamepad.is_pressed(Button::DPadUp)
+        || axis_vertical > tol
     {
-        key_code += 4;
+        key_code += 4
     }
-    if input.key_held_logical(Key::Character("s"))
-        || input.key_held(KeyCode::ArrowDown)
-        || gamepad.pressing(NesInput::Down)
+    if is_key_down(KeyCode::S)
+        || is_key_down(KeyCode::Down)
+        || gamepad.is_pressed(Button::DPadDown)
+        || axis_vertical < -tol
     {
-        key_code += 8;
+        key_code += 8
     }
-    if input.key_held_logical(Key::Character("a"))
-        || input.key_held(KeyCode::ArrowLeft)
-        || gamepad.pressing(NesInput::Left)
+    if is_key_down(KeyCode::A)
+        || is_key_down(KeyCode::Left)
+        || gamepad.is_pressed(Button::DPadLeft)
+        || axis_horizontal < -tol
     {
-        key_code += 16;
+        key_code += 16
     }
-    if input.key_held_logical(Key::Character("d"))
-        || input.key_held(KeyCode::ArrowRight)
-        || gamepad.pressing(NesInput::Right)
+    if is_key_down(KeyCode::D)
+        || is_key_down(KeyCode::Right)
+        || gamepad.is_pressed(Button::DPadRight)
+        || axis_horizontal > tol
     {
-        key_code += 32;
+        key_code += 32
     }
-    if input.key_held_logical(Key::Character("n")) || gamepad.pressing(NesInput::Select) {
-        key_code += 64;
+    if is_key_down(KeyCode::N) || gamepad.is_pressed(Button::Select) {
+        key_code += 64
     }
-    if input.key_held_logical(Key::Character("m")) || gamepad.pressing(NesInput::Start) {
-        key_code += 128;
+    if is_key_down(KeyCode::M) || gamepad.is_pressed(Button::Start) {
+        key_code += 128
     }
+
     (pos_code, key_code)
 }
 
-pub fn handle_event_loop_error(handle: &EventLoopWindowTarget<()>, msg: impl AsRef<str>) {
-    eprintln!("{}", msg.as_ref());
-    handle.exit();
-}
+pub fn get_input_code_no_gamepad(layout: &Layout) -> (u16, u16) {
+    let mp = layout.clamp_mouse();
 
-#[cfg(not(feature = "gamepad"))]
-pub fn get_input_code(input: &WinitInputHelper, pxls: &Pixels) -> (u16, u16) {
-    let raw_mp = input.cursor().unwrap_or((0., 0.));
-    let mp = match pxls.window_pos_to_pixel(raw_mp) {
-        Ok(p) => p,
-        Err(ev) => pxls.clamp_pixel_pos(ev),
-    };
     let pos_code = (mp.1 as u16 * 256) + mp.0 as u16;
     let mut key_code = 0_u16;
-    if input.key_held(KeyCode::Space) || input.mouse_held(MouseButton::Left) {
+    if is_key_down(KeyCode::Space) || is_mouse_button_down(MouseButton::Left) {
         key_code += 1;
     }
-    if input.key_held_logical(Key::Character("b")) || input.mouse_held(MouseButton::Right) {
+    if is_key_down(KeyCode::B) || is_mouse_button_down(MouseButton::Right) {
         key_code += 2;
     }
-    if input.key_held_logical(Key::Character("w")) || input.key_held(KeyCode::ArrowUp) {
-        key_code += 4;
+    if is_key_down(KeyCode::W) || is_key_down(KeyCode::Up) {
+        key_code += 4
     }
-    if input.key_held_logical(Key::Character("s")) || input.key_held(KeyCode::ArrowDown) {
-        key_code += 8;
+    if is_key_down(KeyCode::S) || is_key_down(KeyCode::Down) {
+        key_code += 8
     }
-    if input.key_held_logical(Key::Character("a")) || input.key_held(KeyCode::ArrowLeft) {
-        key_code += 16;
+    if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
+        key_code += 16
     }
-    if input.key_held_logical(Key::Character("d")) || input.key_held(KeyCode::ArrowRight) {
-        key_code += 32;
+    if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
+        key_code += 32
     }
-    if input.key_held_logical(Key::Character("n")) {
-        key_code += 64;
+    if is_key_down(KeyCode::N) {
+        key_code += 64
     }
-    if input.key_held_logical(Key::Character("m")) {
-        key_code += 128;
+    if is_key_down(KeyCode::M) {
+        key_code += 128
     }
+
     (pos_code, key_code)
 }

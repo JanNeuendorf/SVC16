@@ -7,7 +7,7 @@ pub struct Cli {
     pub program: String,
 
     #[arg(short, long, default_value = "1", help = "Set initial window scaling")]
-    pub scaling: u32,
+    pub scaling: i32,
 
     #[arg(
         short,
@@ -27,14 +27,14 @@ pub struct Cli {
         short,
         long,
         default_value_t = false,
-        help = "Output performance metrics"
+        help = "Show performance metrics"
     )]
     pub verbose: bool,
     #[arg(
-        short,
         long,
-        default_value = "3000000",
-        help = "Change the maximum instructions per frame"
+        short,
+        default_value_t = false,
+        help = "Use linear filtering (instead of pixel-perfect) this enables fractional scaling"
     )]
-    pub max_ipf: usize,
+    pub linear_filtering: bool,
 }
