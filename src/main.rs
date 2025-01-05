@@ -34,19 +34,20 @@ async fn main() -> Result<()> {
     let mut cli = Cli::parse();
 
     let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
-    let texture = Texture2D::from_image(&Image::gen_image_color(256, 256, BLACK));
+    let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));
+    let texture = Texture2D::from_image(&image);
     if cli.linear_filtering {
         texture.set_filter(FilterMode::Linear);
     } else {
         texture.set_filter(FilterMode::Nearest);
     }
 
-    let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));
     let mut raw_buffer = [0 as u16; 256 * 256];
     let initial_state = read_u16s_from_file(&cli.program)?;
     let mut engine = Engine::new(initial_state.clone());
     let mut paused = false;
     let mut ipf = 0;
+
     #[cfg(feature = "gamepad")]
     let mut gilrs = match Gilrs::new() {
         Ok(g) => g,
@@ -74,21 +75,21 @@ async fn main() -> Result<()> {
 
         if !paused {
             ipf = 0;
-            let engine_start = Instant::now();
             while !engine.wants_to_sync() && ipf <= MAX_IPF {
                 engine.step()?;
                 ipf += 1;
             }
+
             #[cfg(feature = "gamepad")]
             while let Some(event) = gilrs.next_event() {
                 gilrs.update(&event);
             }
-
-            let _engine_elapsed = engine_start.elapsed();
             #[cfg(not(feature = "gamepad"))]
             let (mpos, keycode) = get_input_code_no_gamepad();
+
             #[cfg(feature = "gamepad")]
             let (mpos, keycode) = get_input_code_gamepad(&gilrs);
+
             engine.perform_sync(mpos, keycode, &mut raw_buffer);
             update_image_buffer(&mut buffer, &raw_buffer);
             image.update(&buffer);
@@ -116,8 +117,8 @@ async fn main() -> Result<()> {
         );
         if cli.verbose {
             draw_rectangle(
-                layout.x + 0.005 * layout.size,
-                layout.y + 0.01 * layout.size,
+                layout.rect_x,
+                layout.rect_y,
                 0.25 * layout.size,
                 layout.font_size,
                 Color::from_rgba(0, 0, 0, 200),
@@ -125,7 +126,7 @@ async fn main() -> Result<()> {
 
             draw_text(
                 &format!("{}", ipf),
-                layout.x + 0.01 * layout.size,
+                layout.font_x,
                 layout.font_y,
                 layout.font_size,
                 LIME,

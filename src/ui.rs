@@ -4,6 +4,9 @@ pub struct Layout {
     pub y: f32,
     pub size: f32,
     pub font_y: f32,
+    pub font_x: f32,
+    pub rect_x: f32,
+    pub rect_y: f32,
     pub font_size: f32,
 }
 impl Layout {
@@ -19,6 +22,9 @@ impl Layout {
             y,
             size: image_size,
             font_y,
+            font_x: x + 0.01 * image_size,
+            rect_x: x + 0.005 * image_size,
+            rect_y: y + 0.01 * image_size,
             font_size: image_size / 15.,
         }
     }

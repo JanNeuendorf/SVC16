@@ -27,9 +27,14 @@ pub struct Cli {
         short,
         long,
         default_value_t = false,
-        help = "Output performance metrics"
+        help = "Show performance metrics"
     )]
     pub verbose: bool,
-    #[arg(long, short, default_value_t = false, help = "Filter")]
+    #[arg(
+        long,
+        short,
+        default_value_t = false,
+        help = "Use linear filtering (instead of pixel-perfect)"
+    )]
     pub linear_filtering: bool,
 }
