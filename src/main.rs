@@ -77,7 +77,12 @@ async fn main() -> Result<()> {
         if !paused {
             ipf = 0;
             while !engine.wants_to_sync() && ipf <= MAX_IPF {
-                engine.step()?;
+                if let Some(debug_output) = engine.step()? {
+                    println!(
+                        "DEBUG label: {} values: {}, {}",
+                        debug_output.0, debug_output.1, debug_output.2
+                    );
+                }
                 ipf += 1;
             }
 
