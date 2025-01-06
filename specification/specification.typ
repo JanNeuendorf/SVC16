@@ -158,7 +158,8 @@ All instructions are 4 values long. A value is, of course, a `u16`.
 The instructions have the form `opcode` `arg1` `arg2` `arg3`.
 
 All instructions are listed in @instructions.
-`@arg1` refers to the value at the memory address `arg1`. If the opcode is greater than 15, the system will abort. If one of the three arguments is not used, it can be set to any value, but it can not be omitted.
+`@arg1` refers to the value at the memory address `arg1`.
+If the opcode is greater than 15, the system will abort.
 
 
 #let instruction_table=table(

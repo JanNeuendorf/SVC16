@@ -122,13 +122,12 @@ If the opcode is greater than 15, ***and the code is run***, the system will abo
 > You can have data blobs in the binary that does not correspond with the opcodes.
 > This is fine **until and unless** you explicitly try to run this blob of data as code.
 
-If one of the three arguments is not used, it can be set to any value, but it can not be omitted.
 
 When the instruction pointer advances, it does so by four positions.
 
 | Opcode | Name      | Advances   | Effect                                                                       |
 | ------ | --------- | ---------- | ---------------------------------------------------------------------------- |
-| 0      | **Set**   | yes        | `@arg1=arg2`                                                                 |
+| 0      | **Set**   | yes        | `if arg3{@arg1=inst_ptr}else{@arg1=arg2}`                                    |
 | 1      | **GoTo**  | if skipped | `if(not @arg3){inst_ptr=@arg1+arg2}`                                         |
 | 2      | **Skip**  | if skipped | `if(not @arg3){inst_ptr=inst_ptr+4*arg1-4*arg2}`                             |
 | 3      | **Add**   | yes        | `@arg3=(@arg1+@arg2)`                                                        |
@@ -138,8 +137,8 @@ When the instruction pointer advances, it does so by four positions.
 | 7      | **Cmp**   | yes        | `@arg3=(@arg1<@arg2)` as unsigned                                            |
 | 8      | **Deref** | yes        | `@arg2=@(@arg1+arg3)`                                                        |
 | 9      | **Ref**   | yes        | `@(@arg1+arg3)=@arg2`                                                        |
-| 10     | **Inst**  | yes        | `@arg1=inst_ptr`                                                             |
-| 11     | **Print** | yes        | Writes `value=@arg1` to `index=@arg2` of buffer `arg3`
+| 10     | **Debug**  | yes       | Provides `arg1,@arg2,@arg3` as debug information                             |
+| 11     | **Print** | yes        | Writes `value=@arg1` to `index=@arg2` of buffer `arg3`                       |
 | 12     | **Read**  | yes        | Copies `index=@arg1` of buffer `arg3` to `@arg2`                             |
 | 13     | **Band**  | yes        | `@arg3=@arg1&@arg2`                                                          |
 | 14     | **Xor**   | yes        | `@arg3=@arg1^@arg2`                                                          |
