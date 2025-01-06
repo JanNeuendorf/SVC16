@@ -13,7 +13,7 @@ const DIV: u16 = 6;
 const CMP: u16 = 7;
 const DEREF: u16 = 8;
 const REF: u16 = 9;
-const INST: u16 = 10;
+const DEBUG: u16 = 10;
 const PRINT: u16 = 11;
 const READ: u16 = 12;
 const BAND: u16 = 13;
@@ -115,11 +115,15 @@ impl Engine {
     fn advance_inst_ptr(&mut self) {
         self.instruction_pointer = self.instruction_pointer.wrapping_add(4);
     }
-    pub fn step(&mut self) -> Result<(), EngineError> {
+    pub fn step(&mut self) -> Result<Option<(u16, u16, u16)>, EngineError> {
         let [opcode, arg1, arg2, arg3] = self.read_instruction();
         match opcode {
             SET => {
-                self.set(arg1, arg2);
+                let value = match arg3 {
+                    0 => arg2,
+                    _ => self.instruction_pointer,
+                };
+                self.set(arg1, value);
                 self.advance_inst_ptr();
             }
             GOTO => {
@@ -177,10 +181,12 @@ impl Engine {
                 self.set(self.get(arg1) + arg3, value);
                 self.advance_inst_ptr();
             }
-            INST => {
-                let value = self.instruction_pointer;
-                self.set(arg1, value);
+            DEBUG => {
+                let label = arg1;
+                let value1 = self.get(arg2);
+                let value2 = self.get(arg3);
                 self.advance_inst_ptr();
+                return Ok(Some((label, value1, value2)));
             }
             PRINT => {
                 if arg3 == 0 {
@@ -219,6 +225,6 @@ impl Engine {
             }
             _ => return Err(EngineError::InvalidInstruction(opcode)),
         }
-        Ok(())
+        Ok(None)
     }
 }

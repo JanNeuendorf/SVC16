@@ -27,7 +27,7 @@ pub struct Cli {
         short,
         long,
         default_value_t = false,
-        help = "Show performance metrics"
+        help = "Show performance metrics and debug info"
     )]
     pub verbose: bool,
     #[arg(

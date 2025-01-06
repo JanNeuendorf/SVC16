@@ -158,7 +158,8 @@ All instructions are 4 values long. A value is, of course, a `u16`.
 The instructions have the form `opcode` `arg1` `arg2` `arg3`.
 
 All instructions are listed in @instructions.
-`@arg1` refers to the value at the memory address `arg1`. If the opcode is greater than 15, the system will abort. If one of the three arguments is not used, it can be set to any value, but it can not be omitted.
+`@arg1` refers to the value at the memory address `arg1`.
+If the opcode is greater than 15, the system will abort.
 
 
 #let instruction_table=table(
@@ -167,7 +168,11 @@ All instructions are listed in @instructions.
   table.header(
     [*Opcode*], [*Name*],[*Effect*],
   ),
-  [0],[*Set*],[`@arg1=arg2`],
+  [0],[*Set*],[`if arg3{
+  @arg1=inst_ptr
+  }else{
+  @arg1=arg2
+  }`],
   [1],[*GoTo*],[`if(not @arg3){inst_ptr=@arg1+arg2}`],
   [2],[*Skip*],[
   ```
@@ -183,7 +188,7 @@ All instructions are listed in @instructions.
   [7],[*Cmp*],[`@arg3=(@arg1<@arg2)` (as unsigned)],
   [8],[*Deref*],[`@arg2=@(@arg1+arg3)`],
   [9],[*Ref*],[`@(@arg1+arg3)=@arg2`],
-  [10],[*Inst*],[`@arg1=inst_ptr`],
+  [10],[*Debug*],[Provides `arg1,@arg2,@arg3` as debug information],
   [11],[*Print*],[Writes `value=@arg1` to `index=@arg2` of buffer `arg3`],
   [12],[*Read*],[Copies `index=@arg1` of buffer `arg3` to `@arg2`.],
   [13],[*Band*],[`@arg3=@arg1&@arg2` (binary and)],
@@ -199,6 +204,20 @@ All instructions are listed in @instructions.
 Every instruction shown in @instructions advances the instruction pointer by four positions _after_ it is completed. The exceptions to this are the *GoTo* and *Skip* instructions. They only do this, if the condition is _not_ met.
 
 When an argument refers to the name of a buffer, it means the screen buffer if it is 0 and the utility buffer otherwise.
+
+== The Debug Instruction
+The *Debug* instruction is special, as it does not change anything about the state of the system.
+It still counts as an instruction for the maximum instruction count.
+It is up to the implementation if, when and in what way the information is provided to the user.
+This means that it is valid to not do anything when the instruction is triggered. 
+In fact, this might be necessary to run the emulator at the intended speed.
+
+The way to think about the signature of the instruction is that the first argument is a label and the other arguments are the values of variables/addresses.
+
+The instruction is meant only for debugging.
+For the programmer that means that the output should not be needed for the use of the program or game as it might be shown in different ways or not at all.
+For the emulator that means that there should be no functionality that depends on the *Debug* instruction. 
+ 
 
 = Constructing the Program
 
