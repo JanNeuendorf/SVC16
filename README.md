@@ -29,7 +29,8 @@ Use `--help` to get a list of available subcommands.
 I do not want to provide an assembler, any kind of compiler or even any ideas about things like call conventions. 
 The idea is that you have to build that yourself. You can play a game from the example folder to get an idea of what can be built.
 <div align="center">
-<img src="examples/rectavoider.gif" alt="Logo" width="500"/>
+<img src="examples/spikeavoider.gif" alt="Logo" width="220"/>
+<img src="examples/rectavoider.gif" alt="Logo" width="220"/>
   </div>
   
 
@@ -75,7 +76,7 @@ The coordinate $(x,y)$ of the screen maps to the index $256y+x$ in the screen-bu
 
 ### Input
 
-<div align="left">
+<div align="left"> 
 <img src="examples/input_tester.gif" alt="Input demo" width="200"/>
   </div>
   
@@ -227,5 +228,4 @@ feel free to open an issue.
 
 - [ ] Write a very detailed specification document
   - In progress (see *specification* directory)
-- [ ] Create a more advanced example program
 - [ ] Test the reference emulator on different platforms
