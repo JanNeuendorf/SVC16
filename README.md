@@ -29,8 +29,8 @@ Use `--help` to get a list of available subcommands.
 I do not want to provide an assembler, any kind of compiler or even any ideas about things like call conventions. 
 The idea is that you have to build that yourself. You can play a game from the example folder to get an idea of what can be built.
 <div align="center">
-<img src="examples/spikeavoider.gif" alt="Logo" width="220"/>
-<img src="examples/rectavoider.gif" alt="Logo" width="220"/>
+<img src="examples/spikeavoider.gif" alt="Logo" width="400"/>
+
   </div>
   
 
