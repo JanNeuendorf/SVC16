@@ -25,8 +25,8 @@ pub struct Engine {
     screen_buffer: [u16; MEMSIZE],
     utility_buffer: [u16; MEMSIZE],
     instruction_pointer: u16,
-    pos_code: u16,
-    key_code: u16,
+    pos_code_dest: u16,
+    key_code_dest: u16,
     sync_called: bool,
     expansion_triggered: bool,
 }
@@ -62,8 +62,8 @@ impl Engine {
             screen_buffer: [0; MEMSIZE],
             utility_buffer: [0; MEMSIZE],
             instruction_pointer: 0,
-            pos_code: 0,
-            key_code: 0,
+            pos_code_dest: 0,
+            key_code_dest: 0,
             sync_called: false,
             expansion_triggered: false,
         }
@@ -72,8 +72,8 @@ impl Engine {
         return self.sync_called;
     }
     pub fn set_input(&mut self, pos_code: u16, key_code: u16) {
-        self.pos_code = pos_code;
-        self.key_code = key_code;
+        self.set(self.pos_code_dest, pos_code);
+        self.set(self.key_code_dest, key_code);
     }
     pub fn perform_sync(
         &mut self,
@@ -81,9 +81,9 @@ impl Engine {
         key_code: u16,
         buffer: &mut [u16; MEMSIZE],
     ) -> () {
-        self.set_input(pos_code, key_code);
         self.sync_called = false;
         *buffer = self.screen_buffer;
+        self.set_input(pos_code, key_code);
         if self.expansion_triggered {
             self.expansion_triggered = false;
             self.utility_buffer = [0; MEMSIZE];
@@ -216,8 +216,8 @@ impl Engine {
             }
             SYNC => {
                 self.sync_called = true;
-                self.set(arg1, self.pos_code);
-                self.set(arg2, self.key_code);
+                self.pos_code_dest = arg1;
+                self.key_code_dest = arg2;
                 if arg3 > 0 {
                     self.expansion_triggered = true;
                 }

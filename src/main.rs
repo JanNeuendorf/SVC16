@@ -87,7 +87,6 @@ async fn main() -> Result<()> {
                 }
                 ipf += 1;
             }
-
             #[cfg(feature = "gamepad")]
             while let Some(event) = gilrs.next_event() {
                 gilrs.update(&event);

@@ -104,7 +104,7 @@ These keys are supposed to represent the face buttons of an NES controller.
 The codes for the *A* and *B* keys also represent the left and right mouse buttons.
 
 On synchronization the new input is loaded into the input-buffer.
-Before the first synchronization, both input codes are zero.
+Before the first synchronization, the input codes are not accessible.
 
 The *position code* is the index of the pixel, the mouse is currently on. 
 It follows the same convention as the screen index explained in @screen.
