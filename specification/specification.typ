@@ -30,12 +30,11 @@ header: align(right,[v #version]))
 
 = Motivation and Goals
 
-We want to fully specify a very simple virtual computer that can be emulated.
 The goal is to recreate the feeling of writing games for a system with very tight hardware constraints without having to deal with the complicated reality of real retro systems. 
 It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it.
-The instruction set and the design in general are in no way meant to resemble something that would make sense in real hardware.
+The instruction set and the design in general are in no way meant to resemble something that would make sense in real hardware. This is primarily because this is aimed only at emulation but also because it encourages different designs when compiling to this architecture. 
 It is also not intended to be as simple and elegant as it could possibly be. This might make it easier to emulate but harder to develop for.
-Since learning about assemblers and compilers is the point, we provide no guidelines on how to build the programs.
+Since learning about assemblers and compilers is the point, we provide no guidelines on how to build complex programs.
 
 == Reproducibility
 
@@ -51,6 +50,7 @@ This might seem at odds with the previous goal.
 But if adding a new feature always requires changing the specification, that either means that supporting any new feature means breaking all compatibility, or it means that any expansions are ruled out forever.
 The compromise is that the behavior for the computer itself is fixed and we define an interface and rules for expansions that can be emulated together with the computer.
 The Idea is that it is always enough to know this specification and one specification (if any) for the expansion.
+Think of this as having an expansion-card slot. We can write code that interfaces with expansions invented after the computer, but the expansion-card can not change the way the cpu works.  
 
 
 = General Principles
@@ -58,7 +58,7 @@ The Idea is that it is always enough to know this specification and one specific
 Every value is represented as a (little-endian) unsigned 16-bit integer.
 That includes numbers, addresses, colors, the instruction pointer and the input.
 Booleans are represented as `u16` values as well: 0 for `false` and >0 for `true`. 
-Whenever an instruction writes out a boolean explicitly, it is guaranteed to represented as the number 1.
+Whenever an instruction writes out a boolean explicitly, it is guaranteed to be represented as the number 1.
 
 There are no registers, no built-in stack or special sections of memory. 
 Operations can be performed directly on arbitrary addresses.
@@ -91,10 +91,10 @@ The coordinate $(0,0)$ is in the upper left-hand corner.
 
 
 #not-specified[
-- Colors do not have to be represented accurately (accessability options).
-- There is no rule for how scaling and aspect ratio might be handled.
+- Colors do not have to be represented accurately (accessability options, artistic shaders).
+- There is no rule for how scaling or filtering might be handled.
 - It is not fixed what the screen shows before it is first synchronized.
-- A cursor can be shown on the window, as long as its position matches the mouse position passed to the system
+- A cursor can be shown on the window, as long as its position matches the mouse position passed to the system. The default assumption should be that there is no external cursor, but it might not always be possible to hide it. 
 - There might be a delay before the updated frame is shown on screen.
   For example one might need to wait for _vsync_ or the window takes time to update.]
 
@@ -103,8 +103,8 @@ The only supported inputs are the mouse position and a list of eight keys.
 These keys are supposed to represent the face buttons of an NES controller.
 The codes for the *A* and *B* keys also represent the left and right mouse buttons.
 
-On synchronization the new input is loaded into the input-buffer.
-Before the first synchronization, the input codes are not accessible.
+On synchronization the new input is stored to a specified memory address.
+This means that the input is inaccessible before the system is first synchronized. (See @instructions, @synchronization)
 
 The *position code* is the index of the pixel, the mouse is currently on. 
 It follows the same convention as the screen index explained in @screen.
@@ -136,14 +136,14 @@ The bits in @inputs are supposed to indicate if a key is currently pressed (and 
 
 #not-specified[
 - It is not guaranteed on which frame the virtual machine sees an input activate or deactivate.
-- The emulator might not allow arbitrary combinations of buttons to be pressed simultaneously.
+
 ]
 
 
 == Synchronization<synchronization>
 When the console executes the *Sync* instruction, the screen buffer is drawn to the screen.
 It is not cleared. The system will be put to sleep until the beginning of the next frame. 
-The targeted timing is 30fps. There is a hard limit of 3000000 instructions per frame. 
+The targeted timing is 30fps. There is a hard limit of 3000000 (three million) instructions per frame. 
 This means that if the Sync command has not been called for 3000000 instructions, it will be performed automatically.
 This can mean that an event (like a mouse click) is never handled.
 An alternative way to describe it is that the syncing happens automatically every frame and the instructions each take $frac(1,30*3000000)$ seconds.
@@ -164,21 +164,31 @@ If the opcode is greater than 15, the system will abort.
 
 #let instruction_table=table(
   columns: (auto,auto,auto),
-  align: horizon,
+  align:(horizon,horizon,left),
   table.header(
     [*Opcode*], [*Name*],[*Effect*],
   ),
-  [0],[*Set*],[`if arg3{
-  @arg1=inst_ptr
-  }else{
-  @arg1=arg2
-  }`],
-  [1],[*GoTo*],[`if(not @arg3){inst_ptr=@arg1+arg2}`],
+  [0],[*Set*],[
+```
+if arg3{
+    @arg1=inst_ptr
+}else{
+    @arg1=arg2
+}
+```
+  ],
+  [1],[*GoTo*],[
+```    
+if(not @arg3){
+  inst_ptr=@arg1+arg2
+}
+  ```
+],
   [2],[*Skip*],[
   ```
-  if(not @arg3){
-    inst_ptr=inst_ptr+4*arg1-4*arg2
-    }
+if(not @arg3){
+  inst_ptr=inst_ptr+4*arg1-4*arg2
+}
   ```
   ],
   [3],[*Add*],[`@arg3=(@arg1+@arg2)`],
@@ -229,9 +239,9 @@ It can be shorter, in which case the end is padded with zeroes.
 The computer will begin by executing the instruction at index 0.
 
 = Handling Exceptions 
-There are only two reasons the program can fail (for internal reasons).
+There are only two ways the program can fail (for internal reasons).
 
-- It tries to divide by zero
+- It tries to divide by zero.
 - It tries to execute an instruction with an opcode greater than 15. 
 
 In both cases, the execution of the program is stopped. It is not restarted automatically.
@@ -262,7 +272,7 @@ It should follow the following rules:
 - It can not change any rule of the emulation. 
 
 
-Synchronizations that are caused by exceeding the instruction limit never trigger the expansion mechanism. The expansion card can not know that such a synchronization happened. 
+Synchronizations that are caused by exceeding the instruction limit never trigger the expansion mechanism. 
 
 
 If no expansion card is available, there is no answer when the exchange is triggered. As a result the utility buffer is simply cleared.
@@ -283,7 +293,7 @@ Further information, examples and a reference emulator can be found at #link("ht
 Everything contained in this project is provided under the _MIT License_.
 Do with it whatever you want.
 
-One think we would ask is that if you distribute a modified version that is incompatible with the specifications,
+One think we would ask is that if you distribute an emulator that is incompatible with the specifications,
 you make it clear that it has breaking changes. 
 
 = Example Program 
@@ -297,7 +307,7 @@ you make it clear that it has breaking changes.
   stroke: (paint: rgb("9e9e9e"),thickness: 2pt),
   text(fill: rgb("#000000"), it))
 
-While this is not needed for the specifications, it might be helpful to look at a very simple example. 
+
 
 
 Our goal could be to print all $2^16$ possible colors to the screen.

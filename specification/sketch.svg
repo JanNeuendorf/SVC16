@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    sodipodi:docname="sketch.svg"
-   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,11 +23,11 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.2973709"
-     inkscape:cx="31.21698"
-     inkscape:cy="148.377"
-     inkscape:window-width="1856"
-     inkscape:window-height="1131"
+     inkscape:zoom="2.5947418"
+     inkscape:cx="106.75436"
+     inkscape:cy="179.01589"
+     inkscape:window-width="3440"
+     inkscape:window-height="1379"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -76,19 +76,19 @@
      x="0.60439652"
      y="0.39472535" />
   <rect
-     style="fill:#c7c7c7;fill-opacity:1;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+     style="fill:#c7c7c7;fill-opacity:1;stroke:#000000;stroke-width:0.343;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      id="rect1196"
-     width="114.58817"
-     height="47.955166"
-     x="3.4289503"
-     y="40.318504" />
+     width="114.59528"
+     height="46.02486"
+     x="3.4253974"
+     y="42.354332" />
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-opacity:1"
      id="rect2"
      width="106.83552"
      height="3.1948919"
      x="5.7333722"
-     y="71.351784" />
+     y="73.391167" />
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      id="rect3"
@@ -112,7 +112,7 @@
      aria-label="2    16-bit values"
      id="text4-2"
      style="font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round"
-     transform="translate(0,6.3500003)">
+     transform="translate(0,8.3893811)">
     <path
        d="m 41.595644,76.756889 h -1.584325 v -0.333375 l 0.568325,-0.574675 q 0.17145,-0.1778 0.276225,-0.295275 0.104775,-0.12065 0.1524,-0.2159 0.04763,-0.09843 0.04763,-0.20955 0,-0.136525 -0.0762,-0.2032 -0.07303,-0.06668 -0.200025,-0.06668 -0.130175,0 -0.254,0.06033 -0.123825,0.06032 -0.26035,0.17145 l -0.26035,-0.307975 q 0.09842,-0.08572 0.206375,-0.15875 0.111125,-0.07303 0.254,-0.117475 0.14605,-0.04762 0.34925,-0.04762 0.22225,0 0.381,0.08255 0.161925,0.07937 0.24765,0.219075 0.0889,0.136525 0.0889,0.31115 0,0.187325 -0.0762,0.3429 -0.07303,0.155575 -0.2159,0.307975 -0.1397,0.1524 -0.339725,0.33655 l -0.2921,0.27305 v 0.02222 h 0.987425 z"
        style="font-weight:bold;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';fill:#000000;stroke:none;stroke-width:0.35"
@@ -170,22 +170,22 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.9467px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.214596;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      x="41.586529"
-     y="81.713913"
+     y="83.753296"
      id="text4-2-5"><tspan
        id="tspan4-1-3"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.214596"
        x="41.586529"
-       y="81.713913">16</tspan></text>
+       y="83.753296">16</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      x="6.6575131"
-     y="49.477089"
+     y="51.516468"
      id="text4-3"><tspan
        id="tspan4-8"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.35"
        x="6.6575131"
-       y="49.477089">Screen-buffer</tspan></text>
+       y="51.516468">Screen-buffer</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
@@ -231,40 +231,44 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      x="6.6575131"
-     y="69.056274"
+     y="71.095657"
      id="text5"><tspan
        id="tspan5"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.35"
        x="6.6575131"
-       y="69.056274">Memory</tspan></text>
+       y="71.095657">Memory</tspan></text>
   <path
      style="fill:none;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      d="m 35.263958,28.43003 c 34.349788,0 34.349788,0 34.349788,0 z"
      id="path5" />
   <path
      style="fill:none;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
-     d="m 46.475735,18.896846 v 21.29424 z"
+     d="m 46.475735,18.722743 v 23.46014 z"
      id="path6" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+     d="m 71.361303,37.785178 v 4.569154 z"
+     id="path6-5" />
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      x="75.50354"
-     y="46.422173"
+     y="48.461552"
      id="text7"><tspan
        id="tspan7"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.35"
        x="75.50354"
-       y="46.422173">Instruction-pointer</tspan></text>
+       y="48.461552">Instruction-pointer</tspan></text>
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      id="rect7"
      width="3.4790916"
      height="3.4789827"
      x="70.052422"
-     y="43.97871" />
+     y="46.018089" />
   <path
      style="fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:1.05, 1.05;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#ArrowWide);marker-end:url(#marker11)"
-     d="M 10.377259,77.431989 H 108.79207"
+     d="M 10.377259,79.47137 H 108.79207"
      id="path10" />
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
@@ -279,24 +283,24 @@
      width="106.83552"
      height="3.1948919"
      x="5.7333722"
-     y="61.826775" />
+     y="63.866154" />
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      x="6.6575131"
-     y="59.531265"
+     y="61.570644"
      id="text6"><tspan
        id="tspan6"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.35"
        x="6.6575131"
-       y="59.531265">Utility-buffer</tspan></text>
+       y="61.570644">Utility-buffer</tspan></text>
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-opacity:1"
      id="rect1"
      width="106.83552"
      height="3.1948919"
      x="5.7333722"
-     y="51.772598" />
+     y="53.811977" />
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
      id="rect5"
@@ -321,4 +325,21 @@
      height="3.4789827"
      x="69.587906"
      y="26.535919" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:Cabin;-inkscape-font-specification:Cabin;letter-spacing:0px;fill:none;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+     x="74.962029"
+     y="37.085091"
+     id="text4-3-3-1-3-2"><tspan
+       id="tspan4-8-0-7-6-9"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.35"
+       x="74.962029"
+       y="37.085091">Debug Port</tspan></text>
+  <rect
+     style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.35;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+     id="rect1073-1"
+     width="3.4790916"
+     height="3.4789827"
+     x="69.587906"
+     y="34.21637" />
 </svg>
