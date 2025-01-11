@@ -43,8 +43,7 @@ async fn main() -> Result<()> {
     }
 
     let mut raw_buffer = [0 as u16; 256 * 256];
-    let initial_state = read_u16s_from_file(&cli.program)?;
-    let mut engine = Engine::new(initial_state.clone());
+    let mut engine = Engine::new(read_u16s_from_file(&cli.program)?);
     let mut paused = false;
     let mut ipf = 0;
 
@@ -63,7 +62,7 @@ async fn main() -> Result<()> {
             paused = !paused;
         }
         if is_key_pressed(KeyCode::R) {
-            engine = Engine::new(initial_state.clone());
+            engine = Engine::new(read_u16s_from_file(&cli.program)?);
             paused = false;
         }
         if is_key_pressed(KeyCode::V) {
