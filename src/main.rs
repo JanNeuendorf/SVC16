@@ -32,6 +32,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() -> Result<()> {
     let mut cli = Cli::parse();
+    print_keybinds();
 
     let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
     let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));

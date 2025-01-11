@@ -4,6 +4,7 @@ use anyhow::Result;
 use flate2::read::GzDecoder;
 use macroquad::color::Color;
 use macroquad::prelude::*;
+use pad::PadStr;
 use std::fs::File;
 use std::io::Read;
 const RES: usize = 256;
@@ -151,4 +152,36 @@ pub fn get_input_code_no_gamepad(layout: &Layout) -> (u16, u16) {
     }
 
     (pos_code, key_code)
+}
+
+pub fn print_keybinds() {
+    let options = vec![
+        ("Input A", "Space / Mouse-Left"),
+        ("Input B", "B / Mouse-Right"),
+        ("Input Up", "Up / W"),
+        ("Input Down", "Down / S"),
+        ("Input Left", "Left / A"),
+        ("Input Right", "Right / D"),
+        ("Input Select", "N"),
+        ("Input Start", "M"),
+        ("Toggle Pause", "P"),
+        ("Reload", "R"),
+        ("Toggle Cursor", "C"),
+        ("Toggle Verbose", "V"),
+    ];
+
+    let left_width = options
+        .iter()
+        .map(|(left, _)| left.len())
+        .max()
+        .unwrap_or(0);
+
+    let linewidth = 40;
+    println!("{}", "-".repeat(linewidth));
+
+    for (left, right) in options {
+        let padded_left = left.pad_to_width(left_width);
+        println!("{}  ---  {}", padded_left, right);
+    }
+    println!("{}", "-".repeat(linewidth));
 }
