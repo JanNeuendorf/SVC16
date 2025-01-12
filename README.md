@@ -5,9 +5,13 @@
   </div>
 This is the specification for an extremely simple "virtual computer" that can be emulated.
 
-The goal in one word is **simplicity**. It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it. That does not mean that it is as simple and elegant as it could possibly be, just that it is easy to understand how the system should behave.  
+There are three primary goals:
 
-The instruction set and the design in general are in no way meant to resemble something that would make sense in real hardware.
+- **Simplicity**: It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it. That does not mean that it is as simple and elegant as it could possibly be, just that it is easy to understand how the system should behave.  
+- **Reproducibility**: The system is fully specified. Programs should run and perform the same everywhere.  
+- **Expandability**: There is a protocol for adding features without breaking changes.
+
+
 
 This repo contains an emulator to run games or programs. It can be installed with cargo:
 
@@ -26,7 +30,7 @@ svc16 /path/to/my_rom.svc16
 
 Use `--help` to get a list of available subcommands.
 
-I do not want to provide an assembler, any kind of compiler or even any ideas about things like call conventions. 
+I do not want to provide an assembler, any kind of compiler, or even any ideas about things like call conventions.
 The idea is that you have to build that yourself. You can play a game from the example folder to get an idea of what can be built.
 <div align="center">
 <img src="examples/spikeavoider.gif" alt="Logo" width="400"/>
@@ -36,17 +40,18 @@ The idea is that you have to build that yourself. You can play a game from the e
 
 ## Quick Overview
 > [!WARNING]
->  Until there are specifications with version 1.0, there could be breaking changes. 
+>  For a complete description of the system, please download the PDF from the _releases_ section.
+
 
 ### No Registers
 There are no CPU registers, just one chunk of memory. Values can be loaded from every memory address and written to every memory address.
 
 ### Everything is an unsigned 16-bit integer
-Everything is represented as a (**little endian**) unsigned 16-bit integer. That includes numbers, addresses, colors, the instruction pointer and the input. 
-Booleans are represented as u16 values as well: 0 for false and >0 for true. (1 when written as a boolean.)
+Everything is represented as an unsigned 16-bit integer. That includes numbers, addresses, colors, the instruction pointer and the input. 
+
 
 ### Wrapping Arithmetic
-All numerical operations that will appear in the instructions are wrapping operations. Division by zero crashes the program.
+All numerical operations are wrapping operations.
 
 ### No Magic Numbers
 The main memory contains one valid address for every u16.
@@ -66,7 +71,7 @@ The shaded section indicates what is visible to the virtual machine while the pa
 
 ### Instruction pointer
 
-The instruction pointer represents an address in main memory. It starts as zero. Then, it is manipulated by the instructions. All operations performed on the instruction pointer are wrapping.
+The instruction pointer represents an address in main memory. It starts as zero. Then, it is manipulated by the instructions.
 
 ### Screen
 
@@ -84,31 +89,15 @@ The only supported inputs are the mouse position and a list of eight keys.
 These keys are supposed to represent the face buttons of an NES controller.
 The codes for the **A** and **B** keys also represent the left and right mouse buttons.
 
-On synchronization the new input is loaded into the input-buffer.
-
-The *position code* is the index of the pixel, the mouse is currently on.
-The *key code* uses bitflags. We count from the least significant bit.
-
-|Bit|Input Name|Mapping in reference emulator|
-|-| -|-|
-|0|**A** / Mouse Left| **Space** / Mouse Left|
-|1|**B** / Mouse Right| **B** / Mouse Right|
-|2|**Up** | **Up** / **W**|
-|3|**Down** | **Down** / **S**|
-|4|**Left** | **Left** / **A**|
-|5|**Right** | **Right** / **D**|
-|6|**Select** | **N**|
-|7|**Start** | **M**|
 
 
 
 ### Synchronization
 
-When the console executes the **Sync** instruction, the screen-buffer is drawn to the screen.
-It is not cleared. The input-buffer is updated.
+When the console synchronizes, the screen-buffer is drawn to the screen and the input-buffer is updated.
 The system will be put to sleep until the beginning of the next frame.
-The targeted timing is 30fps. There is a hard limit of 3000000 instructions per frame.
-This means that if the **Sync** command has not be called for 3000000 instructions, it will be performed automatically.
+The targeted timing is 30fps. There is a hard limit of three million instructions per frame.
+
 
 ### CPU
 
@@ -117,14 +106,12 @@ All instructions are 4 values long. A value is, of course, a u16.
 The instructions have the form `opcode arg1 arg2 arg3`.
 
 In the following table, all instructions are listed. `@arg1` refers to the value at the memory address `arg1`.
-If the opcode is greater than 15, ***and the code is run***, the system will abort.
 
 > [!NOTE]
 > You can have data blobs in the binary that does not correspond with the opcodes.
 > This is fine **until and unless** you explicitly try to run this blob of data as code.
 
 
-When the instruction pointer advances, it does so by four positions.
 
 | Opcode | Name      | Advances   | Effect                                                                       |
 | ------ | --------- | ---------- | ---------------------------------------------------------------------------- |
@@ -145,20 +132,14 @@ When the instruction pointer advances, it does so by four positions.
 | 14     | **Xor**   | yes        | `@arg3=@arg1^@arg2`                                                          |
 | 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order. If arg3!=0, it triggers the expansion port mechanism. |
 
-When an argument refers to the name of a buffer, it means the screen buffer if it is 0 and the utility buffer otherwise.
 
-### Utility Buffer and Expansion
-
-The utility buffer behaves a lot like the screen buffer with the obvious difference that it is not drawn to the screen. This can be used for intermediate storage at runtime, but it always starts at zero.
-
-Its second function is to communicate with the expansion port. You can find more information in the specifications. 
 
 
 ### Constructing a Program
 
-A program is really just the initial state of the main memory.
+A program is just the initial state of the main memory.
 There is no distinction between memory that contains instructions and memory that contains some other asset.
-The initial state is loaded from a binary file that is read as containing the (le) u16 values in order. The maximum size is $2*2^{16}$ bytes ($\approx$ 131.1kB).
+The initial state is loaded from a binary file that is read as containing the (little-endian) u16 values in order. The maximum size is $2*2^{16}$ bytes ($\approx$ 131.1kB).
 It can be shorter, in which case the end is padded with zeroes. The computer will begin by executing the instruction at index 0.
 
 ## Example
@@ -221,11 +202,10 @@ When we run this, we get the following output:
 
 First of all, if you managed to build a cool game or program for the system, please share it!
 
-If you find a discrepancy between this README and the behavior of the emulator or some other problem or bug,
-feel free to open an issue.
+If you find a discrepancy between the specifications and the behavior of the emulator or some other problem or bug,
+feel free to open an issue. Please report things that are not explained well.
+
 
 ### Task List
 
-- [ ] Write a very detailed specification document
-  - In progress (see *specification* directory)
 - [ ] Test the reference emulator on different platforms
