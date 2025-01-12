@@ -40,7 +40,7 @@ The idea is that you have to build that yourself. You can play a game from the e
 
 ## Quick Overview
 > [!WARNING]
->  For a complete description of the system, please download the PDF from the _releases_ section.
+>  For a complete description of the system, please download the PDF from the [releases](https://github.com/JanNeuendorf/SVC16/releases) section.
 
 
 ### No Registers
