@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     let mut cli = Cli::parse();
     print_keybinds();
 
-    let mut buffer = [Color::from_rgba(255, 255, 255, 255); 256 * 256];
+    let mut buffer = vec![Color::from_rgba(255, 255, 255, 255); 256 * 256];
     let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));
     let texture = Texture2D::from_image(&image);
     if cli.linear_filtering {
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
         texture.set_filter(FilterMode::Nearest);
     }
 
-    let mut raw_buffer = [0 as u16; 256 * 256];
+    let mut raw_buffer = vec![0 as u16; 256 * 256];
     let mut engine = Engine::new(read_u16s_from_file(&cli.program)?);
     let mut paused = false;
     let mut ipf = 0;
