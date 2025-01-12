@@ -30,37 +30,37 @@ header: align(right,[v #version]))
 
 = Motivation and Goals
 
-The goal is to recreate the feeling of writing games for a system with very tight hardware constraints without having to deal with the complicated reality of real retro systems. 
-It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it.
-The instruction set and the design in general are in no way meant to resemble something that would make sense in real hardware. This is primarily because this is aimed only at emulation but also because it encourages different designs when compiling to this architecture. 
+The goal is to recreate the feeling of writing games for a system with very tight hardware constraints without dealing with the complicated reality of real retro systems.
+Understanding every instruction, writing machine code that runs on it, and writing a compiler for it should be simple.
+The instruction set is in no way meant to resemble something that would make sense in real hardware. This is primarily because this is aimed only at emulation but also because it encourages different designs when compiling to this architecture. 
 It is also not intended to be as simple and elegant as it could possibly be. This might make it easier to emulate but harder to develop for.
 Since learning about assemblers and compilers is the point, we provide no guidelines on how to build complex programs.
 
 == Reproducibility
 
 The biggest secondary goal is to design a system that behaves the same everywhere.
-The question of how the emulation is run should never matter for the person writing the program or game.
-This means there can be no features that might only available in one implementation. 
-It also means, that the performance characteristics must be the same.
+The question of how the emulation is run should never matter to the person writing the program or game.
+This means there can be no features that might only be available in one implementation. 
+It also means that the performance characteristics must be the same.
 An emulator can either run the system at the intended speed, or it can not. 
 
 == Expandability
 
-This might seem at odds with the previous goal. 
-But if adding a new feature always requires changing the specification, that either means that supporting any new feature means breaking all compatibility, or it means that any expansions are ruled out forever.
-The compromise is that the behavior for the computer itself is fixed and we define an interface and rules for expansions that can be emulated together with the computer.
-The Idea is that it is always enough to know this specification and one specification (if any) for the expansion.
-Think of this as having an expansion-card slot. We can write code that interfaces with expansions invented after the computer, but the expansion-card can not change the way the cpu works.  
+Expandability might seem at odds with the previous goal. 
+But if adding a new feature always requires changing the specification, that either means that adding any new features breaks all compatibility, or that any expansions are ruled out forever.
+The compromise is that the behavior of the computer itself is fixed and we define an interface and rules for expansions that can be emulated together with the computer.
+The idea is that it is always enough to know this specification and one specification (if any) for the expansion.
+Think of this as having an expansion card slot. We can write code that interfaces with expansions invented after the computer, but the expansion card can not change the way the CPU works.  
 
 
 = General Principles
 
-Every value is represented as a (little-endian) unsigned 16-bit integer.
-That includes numbers, addresses, colors, the instruction pointer and the input.
+Every value is represented as an unsigned 16-bit integer.
+That includes numbers, addresses, colors, the instruction pointer, and the input.
 Booleans are represented as `u16` values as well: 0 for `false` and >0 for `true`. 
 Whenever an instruction writes out a boolean explicitly, it is guaranteed to be represented as the number 1.
 
-There are no registers, no built-in stack or special sections of memory. 
+There are no registers, no built-in stack, or special sections of memory. 
 Operations can be performed directly on arbitrary addresses.
 There is no separation between data and instructions.
 
@@ -91,19 +91,19 @@ The coordinate $(0,0)$ is in the upper left-hand corner.
 
 
 #not-specified[
-- Colors do not have to be represented accurately (accessability options, artistic shaders).
+- Colors do not have to be represented accurately (accessibility options, artistic shaders).
 - There is no rule for how scaling or filtering might be handled.
 - It is not fixed what the screen shows before it is first synchronized.
 - A cursor can be shown on the window, as long as its position matches the mouse position passed to the system. The default assumption should be that there is no external cursor, but it might not always be possible to hide it. 
 - There might be a delay before the updated frame is shown on screen.
-  For example one might need to wait for _vsync_ or the window takes time to update.]
+  For example, one might need to wait for _vsync_, or the window takes time to update.]
 
 == Input
 The only supported inputs are the mouse position and a list of eight keys. 
 These keys are supposed to represent the face buttons of an NES controller.
 The codes for the *A* and *B* keys also represent the left and right mouse buttons.
 
-On synchronization the new input is stored to a specified memory address.
+On synchronization, the new input is written to a specified memory address.
 This means that the input is inaccessible before the system is first synchronized. (See @instructions, @synchronization)
 
 The *position code* is the index of the pixel, the mouse is currently on. 
@@ -218,9 +218,9 @@ When an argument refers to the name of a buffer, it means the screen buffer if i
 == The Debug Instruction
 The *Debug* instruction is special, as it does not change anything about the state of the system.
 It still counts as an instruction for the maximum instruction count.
-It is up to the implementation if, when and in what way the information is provided to the user.
+It is up to the implementation if, when, and in what way the information is provided to the user.
 This means that it is valid to not do anything when the instruction is triggered. 
-In fact, this might be necessary to run the emulator at the intended speed.
+This might be necessary to run the emulator at the intended speed.
 
 The way to think about the signature of the instruction is that the first argument is a label and the other arguments are the values of variables/addresses.
 
@@ -231,9 +231,9 @@ For the emulator that means that there should be no functionality that depends o
 
 = Constructing the Program
 
-A program is really just the initial state of the main memory.
+A program is just the initial state of the main memory.
 There is no distinction between memory that contains instructions and memory that contains some other asset.
-The initial state is loaded from a binary file that is read as containing the (le) u16 values in order. 
+The initial state is loaded from a binary file that is read as containing the (little-endian) u16 values in order.
 The maximum size is $2*2^16  upright("bytes") approx 131.1 upright("kB")$.
 It can be shorter, in which case the end is padded with zeroes.
 The computer will begin by executing the instruction at index 0.
@@ -263,10 +263,10 @@ Its second function is to communicate with the expansion port.
 The goal is to provide a mechanism for someone to add additional functionality to their emulator without making it completely incompatible.
 This we call the expansion card.
 The mechanism works as follows:
-If the expansion port is triggered with the *Sync* instruction, it writes out the full utility buffer through the virtual port, making it available for the expansion card to read. It is then replaced by $2^16$ new values provided by the expansion. From the programs perspective, this is an atomic operation. It triggers the mechanism with the *Sync* instruction and when it gets to run again, the whole buffer has been exchanged. This is supposed to model a transfer of data between the program and the virtual expansion card. 
+If the expansion port is triggered with the *Sync* instruction, it writes out the full utility buffer through the virtual port, making it available for the expansion card to read. It is then replaced by $2^16$ new values provided by the expansion. From the perspective of the program, this is an atomic operation. It triggers the mechanism with the *Sync* instruction and when it gets to run again, the whole buffer has been exchanged. This is supposed to model a transfer of data between the program and the virtual expansion card. 
 It should follow the following rules:
 - The data coming in can not depend on the data being flushed out this frame. It can be influenced by previous transfers, but it can not run computations during a transfer. 
-- The expansion card does not get access to any other information internal to the system (screen buffer, memory or instruction pointer). It can not manipulate these components either. 
+- The expansion card does not get access to any other information internal to the system (screen buffer, memory, or instruction pointer). It can not manipulate these components either. 
 - It can not manipulate the utility buffer at any point where the mechanism was not explicitly activated.
 - It can not see or manipulate what is on the screen or what input is being passed to the system.
 - It can not change any rule of the emulation. 
@@ -275,7 +275,7 @@ It should follow the following rules:
 Synchronizations that are caused by exceeding the instruction limit never trigger the expansion mechanism. 
 
 
-If no expansion card is available, there is no answer when the exchange is triggered. As a result the utility buffer is simply cleared.
+If no expansion card is available, there is no answer when the exchange is triggered. As a result, the utility buffer is simply cleared.
 
 Here are some examples of what an expansion card might do:
 - Play an audio sample. 
@@ -285,17 +285,18 @@ Here are some examples of what an expansion card might do:
 - Connect two SVC16 systems.
 
 The mechanism is intentionally designed to allow for emulators that mimic _swapping the expansion card at runtime_.
-The system itself has no mechanism to know with which expansion (if any) it is being emulated at any given time, so in addition to changing the expansion externally this change would need to be communicated to the program. 
+The system itself has no mechanism to know with which expansion (if any) it is being emulated at any given time, so in addition to changing the expansion externally, this change would need to be communicated to the program. 
 
 
-= Miscellaneous
-Further information, examples and a reference emulator can be found at #link("https://github.com/JanNeuendorf/SVC16").
-Everything contained in this project is provided under the _MIT License_.
-Do with it whatever you want.
+// = Miscellaneous
+// Further information, examples, and a reference emulator can be found at #link("https://github.com/JanNeuendorf/SVC16").
+// Everything contained in this project is provided under the _MIT License_.
+// Do with it whatever you want.
 
-One think we would ask is that if you distribute an emulator that is incompatible with the specifications,
-you make it clear that it has breaking changes. 
+// One thing we would ask is that if you distribute an emulator that is incompatible with the specifications,
+// you make it clear that it has breaking changes. 
 
+#colbreak()
 = Example Program 
 
 #[
@@ -375,6 +376,6 @@ When we run this, we should see the output shown in @colors.
   image("colors_scaled.png", width: 40%),
   caption: [Output of the color example.],
 ) <colors>
-Can you figure why the program crashes if a button is pressed? How could this be fixed?
+Can you figure out why the program crashes if a button is pressed? How could this be fixed?
 ]
 
