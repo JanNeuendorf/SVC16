@@ -21,9 +21,9 @@ const XOR: u16 = 14;
 const SYNC: u16 = 15;
 
 pub struct Engine {
-    memory: [u16; MEMSIZE],
-    screen_buffer: [u16; MEMSIZE],
-    utility_buffer: [u16; MEMSIZE],
+    memory: Vec<u16>,
+    screen_buffer: Vec<u16>,
+    utility_buffer: Vec<u16>,
     instruction_pointer: u16,
     pos_code_dest: u16,
     key_code_dest: u16,
@@ -46,7 +46,7 @@ impl Engine {
         T: IntoIterator<Item = u16>,
     {
         let mut iter = state.into_iter();
-        let mut memory = [0_u16; MEMSIZE];
+        let mut memory = vec![0; MEMSIZE];
         for i in 0..MEMSIZE {
             match iter.next() {
                 Some(val) => {
@@ -59,8 +59,8 @@ impl Engine {
         }
         Self {
             memory,
-            screen_buffer: [0; MEMSIZE],
-            utility_buffer: [0; MEMSIZE],
+            screen_buffer: vec![0; MEMSIZE],
+            utility_buffer: vec![0; MEMSIZE],
             instruction_pointer: 0,
             pos_code_dest: 0,
             key_code_dest: 0,
@@ -75,18 +75,13 @@ impl Engine {
         self.set(self.pos_code_dest, pos_code);
         self.set(self.key_code_dest, key_code);
     }
-    pub fn perform_sync(
-        &mut self,
-        pos_code: u16,
-        key_code: u16,
-        buffer: &mut [u16; MEMSIZE],
-    ) -> () {
+    pub fn perform_sync(&mut self, pos_code: u16, key_code: u16, buffer: &mut Vec<u16>) -> () {
         self.sync_called = false;
-        *buffer = self.screen_buffer;
+        *buffer = self.screen_buffer.clone();
         self.set_input(pos_code, key_code);
         if self.expansion_triggered {
             self.expansion_triggered = false;
-            self.utility_buffer = [0; MEMSIZE];
+            self.utility_buffer = vec![0; MEMSIZE];
         }
     }
 }
