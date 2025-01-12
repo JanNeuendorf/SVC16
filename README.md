@@ -108,7 +108,7 @@ The instructions have the form `opcode arg1 arg2 arg3`.
 In the following table, all instructions are listed. `@arg1` refers to the value at the memory address `arg1`.
 
 > [!NOTE]
-> You can have data blobs in the binary that does not correspond with the opcodes.
+> You can have data blobs in the binary that do not correspond with the opcodes.
 > This is fine **until and unless** you explicitly try to run this blob of data as code.
 
 
