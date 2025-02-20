@@ -2,7 +2,7 @@ mod cli;
 mod engine;
 mod ui;
 mod utils;
-#[allow(unused)]
+#[allow(unused)] // Usage depends on Gamepad feature
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use cli::Cli;
@@ -13,10 +13,12 @@ use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 use ui::Layout;
 use utils::*;
-const MAX_IPF: usize = 3000000;
+const MAX_IPF: usize = 3000000; // Maximum instruction can be changed here for easier testing.
 const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
 fn window_conf() -> Conf {
+    // Both the scaling and the fullscreen options are only important for the initial launch of the window.
+    // You can still rescale or exit fullscreen mode.
     let cli = Cli::parse();
     if cli.fullscreen {}
 
@@ -34,15 +36,19 @@ async fn main() -> Result<()> {
     let mut cli = Cli::parse();
     print_keybinds();
 
+    // This is the raw image data.
     let mut buffer = vec![Color::from_rgba(255, 255, 255, 255); 256 * 256];
+
     let mut image = Image::gen_image_color(256, 256, Color::from_rgba(0, 0, 0, 255));
     let texture = Texture2D::from_image(&image);
+
     if cli.linear_filtering {
         texture.set_filter(FilterMode::Linear);
     } else {
         texture.set_filter(FilterMode::Nearest);
     }
 
+    // This is not the screen-buffer itself. It still needs to be synchronized.
     let mut raw_buffer = vec![0 as u16; 256 * 256];
     let mut engine = Engine::new(read_u16s_from_file(&cli.program)?);
     let mut paused = false;
@@ -63,6 +69,7 @@ async fn main() -> Result<()> {
             paused = !paused;
         }
         if is_key_pressed(KeyCode::R) {
+            // The current behavior is reloading the file and unpausing.
             engine = Engine::new(read_u16s_from_file(&cli.program)?);
             paused = false;
         }
@@ -72,7 +79,9 @@ async fn main() -> Result<()> {
         if is_key_pressed(KeyCode::C) {
             cli.cursor = !cli.cursor;
         }
-
+        // The size of the image in the window depends on the filtering.
+        // If it is linear, it is as big as it can be.
+        // If it is nearest, it is the largest possible integer scaling.
         let layout = Layout::generate(cli.linear_filtering);
         if !paused {
             ipf = 0;
@@ -107,7 +116,7 @@ async fn main() -> Result<()> {
         if layout.cursor_in_window() {
             show_mouse(cli.cursor);
         } else {
-            show_mouse(true);
+            show_mouse(true); //The cursor is always shown when it is not on the virtual screen.
         }
 
         draw_texture_ex(
@@ -122,6 +131,7 @@ async fn main() -> Result<()> {
             },
         );
         if cli.verbose {
+            // Background of the performance metrics.
             draw_rectangle(
                 layout.rect_x,
                 layout.rect_y,
@@ -145,6 +155,7 @@ async fn main() -> Result<()> {
             std::thread::sleep(FRAMETIME - elapsed);
         } else {
             if cli.verbose {
+                // If you see this, the program is running too slow on your PC.
                 println!("Frame was not processed in time");
             }
         }

@@ -20,11 +20,14 @@ const BAND: u16 = 13;
 const XOR: u16 = 14;
 const SYNC: u16 = 15;
 
+// The goal is to eventually stabilize the api for the Engine so it can be easily reused in different emulators.
+// This has to be postponed until the first expansions are implemented and tested.
 pub struct Engine {
     memory: Vec<u16>,
     screen_buffer: Vec<u16>,
     utility_buffer: Vec<u16>,
     instruction_pointer: u16,
+    //These are the addreses that the input should be written to (as requested by Sync).
     pos_code_dest: u16,
     key_code_dest: u16,
     sync_called: bool,
@@ -44,6 +47,8 @@ impl Engine {
     pub fn new<T>(state: T) -> Self
     where
         T: IntoIterator<Item = u16>,
+        //The iterator can be shorter, in which case the rest of the memory is left as zeros.
+        //If it is longer, the end is never read.
     {
         let mut iter = state.into_iter();
         let mut memory = vec![0; MEMSIZE];
@@ -75,17 +80,30 @@ impl Engine {
         self.set(self.pos_code_dest, pos_code);
         self.set(self.key_code_dest, key_code);
     }
-    pub fn perform_sync(&mut self, pos_code: u16, key_code: u16, buffer: &mut Vec<u16>) -> () {
+    pub fn perform_sync(
+        &mut self,
+        pos_code: u16,
+        key_code: u16,
+        screen_buffer_destination: &mut Vec<u16>,
+    ) -> Option<Vec<u16>> {
         self.sync_called = false;
-        *buffer = self.screen_buffer.clone();
+        // The clone makes the API easier and doesn't seem to be to expensive in practice.
+        *screen_buffer_destination = self.screen_buffer.clone();
         self.set_input(pos_code, key_code);
+        // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
         if self.expansion_triggered {
             self.expansion_triggered = false;
-            self.utility_buffer = vec![0; MEMSIZE];
+            return Some(std::mem::replace(
+                &mut self.utility_buffer,
+                vec![0; MEMSIZE],
+            ));
+        } else {
+            return None;
         }
     }
 }
 impl Engine {
+    // Public for debugging.
     pub fn get(&self, index: u16) -> u16 {
         return self.memory[index as usize];
     }

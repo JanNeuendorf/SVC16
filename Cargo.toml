@@ -1,6 +1,6 @@
 [package]
 name = "svc16"
-version = "1.0.0-beta2"
+version = "1.0.0-beta3"
 edition = "2021"
 authors = ["Jan Neuendorf"]
 description = "An emulator for a simple virtual computer"
