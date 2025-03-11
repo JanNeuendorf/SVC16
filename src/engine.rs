@@ -86,10 +86,12 @@ impl Engine {
         key_code: u16,
         screen_buffer_destination: &mut Vec<u16>,
     ) -> Option<Vec<u16>> {
-        self.sync_called = false;
         // The clone makes the API easier and doesn't seem to be to expensive in practice.
         *screen_buffer_destination = self.screen_buffer.clone();
-        self.set_input(pos_code, key_code);
+        if self.sync_called {
+            self.sync_called = false;
+            self.set_input(pos_code, key_code);
+        }
         // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
         if self.expansion_triggered {
             self.expansion_triggered = false;
