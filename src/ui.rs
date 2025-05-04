@@ -35,7 +35,11 @@ impl Layout {
         let (raw_x, raw_y) = mouse_position();
         let clamped_x = (raw_x.clamp(self.x, self.x + self.size) - self.x) / self.size * 255.;
         let clamped_y = (raw_y.clamp(self.y, self.y + self.size) - self.y) / self.size * 255.;
-        (clamped_x, clamped_y)
+        // The mouse position is slightly modified so that the maximal position can be reached when the image takes up the entire window.
+        (
+            (clamped_x * 255. / 254.).min(255.),
+            (clamped_y * 255. / 254.).min(255.),
+        )
     }
     pub fn cursor_in_window(&self) -> bool {
         let mp = mouse_position();
