@@ -181,3 +181,32 @@ variables, constants, data ...). This can be easily done by adding a constant
 called `"free"` which resolves to an address where the first free address is
 stored.
 
+## The first compiler
+
+We want to design a simple programming language that is then compiled down to
+the assembly syntax we just made up. We will not give any examples for the
+syntax here as this can be easily changed according to personal preference.In
+order to get a working version that will suffice for our next project, we need
+three basic things: conditionals, loops and routines.
+
+### Conditionals
+
+The easiest kind of conditional would be of the form
+`if(condition_variable) {block}`. We can compile this in three steps:
+
+- 1. Compile the block to lines of instructions.
+- 2. Generate a unique label for the if block and add it to the last instruction
+     of the block.
+- 3. Add the instruction `JumpAfter @unique_label condition_variable` to the
+     front of the block.
+
+### Loops
+
+There are, of course, different kinds of loop we want to consider. A loop
+without a condition can be compiled as follows:
+
+- 1. Generate two unique labels for the loop: `unique_start` and `unique_end`
+- 2. Compile the inner block of the loop with the labels as additional contexts
+     so that statements like `break` and `continue` can be handled.
+- 3. Label the first instruction of the block `unique_start`.
+- 4. Add the instruction `JumpTo @unique_start "0" <unique_end>` to the end.
