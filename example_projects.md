@@ -129,9 +129,10 @@ instruction is replaced by exactly one new one. We can, however, have
 instructions with fewer arguments. Examples would be:
 
 ```
-incr variable -> Add variable "1" variable
-negate variable -> Xor variable "1" variable
-jump location condition  -> GoTo "0" location condition // where location is not a variable
+Incr variable -> Add variable "1" variable
+Negate variable -> Xor variable "1" variable
+JumpTo location condition  -> GoTo "0" location condition // where location is not a variable
+JumpAfter location condition  -> GoTo "1" location condition // where location is not a variable
 
 ```
 
@@ -145,8 +146,38 @@ each line.
 Print color color 0  <start>
 Incr color    
 Cmp color "65535" condition   
-negate condition
-jump @start condition   
+Negate condition
+JumpTo @start condition   
 Sync 0 0 0        
-jump @start "0"       
+JumpTo @start "0"       
 ```
+
+References can then be resolved by counting the lines (and multiplying by 4 to
+get the memory address).
+
+### Including Data
+
+We might want to include large sequences of data for things like sprites. This
+can be done in a way very similar to constants. The syntax could look something
+like this
+
+```
+Print "path/to/binary.dat" index 0  <start>
+```
+
+This does two things:
+
+- 1. It places the content of the binary file into the program.
+- 2. It creates a constant that stores the first address of this content.
+
+This way, we can iterate over the data at runtime, using the `Deref`
+instruction.
+
+### Enabling memory management
+
+So far, we can only use variables of fixed size. If we want to allocate memory
+at runtime, we have to know what part of memory is not used by the program (or
+variables, constants, data ...). This can be easily done by adding a constant
+called `"free"` which resolves to an address where the first free address is
+stored.
+
