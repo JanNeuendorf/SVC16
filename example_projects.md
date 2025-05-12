@@ -210,3 +210,24 @@ without a condition can be compiled as follows:
      so that statements like `break` and `continue` can be handled.
 - 3. Label the first instruction of the block `unique_start`.
 - 4. Add the instruction `JumpTo @unique_start "0" <unique_end>` to the end.
+
+### Routines
+
+There are many different ways calling a routine can be implemented. Here is a
+very simple way this might be done.
+
+At the callsite, we do the following:
+
+- 1. Copy each of the arguments into the corresponding variable of the function.
+- 2. Write the current value of the instruction pointer into a variable scoped
+     to the function.
+- 3. Jump to the first instruction of the function.
+- 4. Copy the variables from the function back into the local variables.
+
+When compiling the function, we just have to add instructions to the end to jump
+back to the first instruction of 4.
+
+This method, while simple, has some downsides, for example recursion is not
+possible. It also relies on the fact, that we know the addresses of the
+function's arguments. Ideally, we would like to include functions that are
+already compiled.
