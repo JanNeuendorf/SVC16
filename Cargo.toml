@@ -18,3 +18,8 @@ thiserror = "2.0.3"
 [features]
 default=[]
 gamepad = ["gilrs"]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true
