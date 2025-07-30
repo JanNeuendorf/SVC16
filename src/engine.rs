@@ -23,9 +23,9 @@ const SYNC: u16 = 15;
 // The goal is to eventually stabilize the api for the Engine so it can be easily reused in different emulators.
 // This has to be postponed until the first expansions are implemented and tested.
 pub struct Engine {
-    memory: Vec<u16>,
-    screen_buffer: Vec<u16>,
-    utility_buffer: Vec<u16>,
+    memory: Box<[u16; MEMSIZE]>,
+    screen_buffer: Box<[u16; MEMSIZE]>,
+    utility_buffer: Box<[u16; MEMSIZE]>,
     instruction_pointer: u16,
     //These are the addreses that the input should be written to (as requested by Sync).
     pos_code_dest: u16,
@@ -56,9 +56,15 @@ impl Engine {
             *cell = val;
         }
         Self {
-            memory,
-            screen_buffer: vec![0; MEMSIZE],
-            utility_buffer: vec![0; MEMSIZE],
+            memory: memory
+                .try_into()
+                .expect("failed to convert memory into boxed slice"),
+            screen_buffer: vec![0; MEMSIZE]
+                .try_into()
+                .expect("failed to convert screen buffer into boxed"),
+            utility_buffer: vec![0; MEMSIZE]
+                .try_into()
+                .expect("failed to convert screen buffer into boxed"),
             instruction_pointer: 0,
             pos_code_dest: 0,
             key_code_dest: 0,
@@ -77,10 +83,9 @@ impl Engine {
         &mut self,
         pos_code: u16,
         key_code: u16,
-        screen_buffer_destination: &mut Vec<u16>,
-    ) -> Option<Vec<u16>> {
-        // The clone makes the API easier and doesn't seem to be to expensive in practice.
-        *screen_buffer_destination = self.screen_buffer.clone();
+        screen_buffer_destination: &mut [u16],
+    ) {
+        screen_buffer_destination.copy_from_slice(&*self.screen_buffer);
         if self.sync_called {
             self.sync_called = false;
             self.set_input(pos_code, key_code);
@@ -88,12 +93,7 @@ impl Engine {
         // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
         if self.expansion_triggered {
             self.expansion_triggered = false;
-            return Some(std::mem::replace(
-                &mut self.utility_buffer,
-                vec![0; MEMSIZE],
-            ));
-        } else {
-            return None;
+            self.utility_buffer.fill(0);
         }
     }
 }
