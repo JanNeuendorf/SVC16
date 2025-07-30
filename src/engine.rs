@@ -23,9 +23,9 @@ const SYNC: u16 = 15;
 // The goal is to eventually stabilize the api for the Engine so it can be easily reused in different emulators.
 // This has to be postponed until the first expansions are implemented and tested.
 pub struct Engine {
-    memory: Vec<u16>,
-    screen_buffer: Vec<u16>,
-    utility_buffer: Vec<u16>,
+    memory: Box<[u16; MEMSIZE]>,
+    screen_buffer: Box<[u16; MEMSIZE]>,
+    utility_buffer: Box<[u16; MEMSIZE]>,
     instruction_pointer: u16,
     //These are the addreses that the input should be written to (as requested by Sync).
     pos_code_dest: u16,
@@ -50,22 +50,21 @@ impl Engine {
         //The iterator can be shorter, in which case the rest of the memory is left as zeros.
         //If it is longer, the end is never read.
     {
-        let mut iter = state.into_iter();
+        let iter = state.into_iter();
         let mut memory = vec![0; MEMSIZE];
-        for i in 0..MEMSIZE {
-            match iter.next() {
-                Some(val) => {
-                    memory[i] = val;
-                }
-                _ => {
-                    break;
-                }
-            }
+        for (cell, val) in memory.iter_mut().zip(iter) {
+            *cell = val;
         }
         Self {
-            memory,
-            screen_buffer: vec![0; MEMSIZE],
-            utility_buffer: vec![0; MEMSIZE],
+            memory: memory
+                .try_into()
+                .expect("failed to convert memory into boxed array"),
+            screen_buffer: vec![0; MEMSIZE]
+                .try_into()
+                .expect("failed to convert screen buffer into boxed array"),
+            utility_buffer: vec![0; MEMSIZE]
+                .try_into()
+                .expect("failed to convert screen buffer into boxed array"),
             instruction_pointer: 0,
             pos_code_dest: 0,
             key_code_dest: 0,
@@ -74,7 +73,7 @@ impl Engine {
         }
     }
     pub fn wants_to_sync(&self) -> bool {
-        return self.sync_called;
+        self.sync_called
     }
     pub fn set_input(&mut self, pos_code: u16, key_code: u16) {
         self.set(self.pos_code_dest, pos_code);
@@ -84,10 +83,9 @@ impl Engine {
         &mut self,
         pos_code: u16,
         key_code: u16,
-        screen_buffer_destination: &mut Vec<u16>,
-    ) -> Option<Vec<u16>> {
-        // The clone makes the API easier and doesn't seem to be to expensive in practice.
-        *screen_buffer_destination = self.screen_buffer.clone();
+        screen_buffer_destination: &mut [u16],
+    ) {
+        screen_buffer_destination.copy_from_slice(&*self.screen_buffer);
         if self.sync_called {
             self.sync_called = false;
             self.set_input(pos_code, key_code);
@@ -95,28 +93,23 @@ impl Engine {
         // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
         if self.expansion_triggered {
             self.expansion_triggered = false;
-            return Some(std::mem::replace(
-                &mut self.utility_buffer,
-                vec![0; MEMSIZE],
-            ));
-        } else {
-            return None;
+            self.utility_buffer.fill(0);
         }
     }
 }
 impl Engine {
     // Public for debugging.
     pub fn get(&self, index: u16) -> u16 {
-        return self.memory[index as usize];
+        self.memory[index as usize]
     }
     fn set(&mut self, index: u16, value: u16) {
         self.memory[index as usize] = value;
     }
     fn get_screen_buffer(&self, index: u16) -> u16 {
-        return self.screen_buffer[index as usize];
+        self.screen_buffer[index as usize]
     }
     fn get_utility_buffer(&self, index: u16) -> u16 {
-        return self.utility_buffer[index as usize];
+        self.utility_buffer[index as usize]
     }
     fn set_screen_buffer(&mut self, index: u16, value: u16) {
         self.screen_buffer[index as usize] = value;
@@ -125,7 +118,13 @@ impl Engine {
         self.utility_buffer[index as usize] = value;
     }
     pub fn read_instruction(&self) -> [u16; 4] {
-        return [0, 1, 2, 3].map(|o| self.get(self.instruction_pointer.wrapping_add(o)));
+        let inst_ptr = self.instruction_pointer;
+        [
+            self.get(inst_ptr.wrapping_add(0)),
+            self.get(inst_ptr.wrapping_add(1)),
+            self.get(inst_ptr.wrapping_add(2)),
+            self.get(inst_ptr.wrapping_add(3)),
+        ]
     }
     fn advance_inst_ptr(&mut self) {
         self.instruction_pointer = self.instruction_pointer.wrapping_add(4);

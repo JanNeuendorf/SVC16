@@ -1,6 +1,6 @@
 [package]
 name = "svc16"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 authors = ["Jan Neuendorf"]
 description = "An emulator for a simple virtual computer"
@@ -18,3 +18,8 @@ thiserror = "2.0.3"
 [features]
 default=[]
 gamepad = ["gilrs"]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true

@@ -20,7 +20,7 @@ fn window_conf() -> Conf {
     // Both the scaling and the fullscreen options are only important for the initial launch of the window.
     // You can still rescale or exit fullscreen mode.
     let cli = Cli::parse();
-    if cli.fullscreen {}
+    
 
     Conf {
         window_title: "SVC16".to_owned(),
@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
     }
 
     // This is not the screen-buffer itself. It still needs to be synchronized.
-    let mut raw_buffer = vec![0 as u16; 256 * 256];
+    let mut raw_buffer = vec![0u16; 256 * 256];
     let mut engine = Engine::new(read_u16s_from_file(&cli.program)?);
     let mut paused = false;
     let mut ipf = 0;
@@ -153,11 +153,9 @@ async fn main() -> Result<()> {
         let elapsed = start_time.elapsed();
         if elapsed < FRAMETIME {
             std::thread::sleep(FRAMETIME - elapsed);
-        } else {
-            if cli.verbose {
-                // If you see this, the program is running too slow on your PC.
-                println!("Frame was not processed in time");
-            }
+        } else if cli.verbose {
+            // If you see this, the program is running too slow on your PC.
+            println!("Frame was not processed in time");
         }
         next_frame().await;
     }
