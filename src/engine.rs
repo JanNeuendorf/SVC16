@@ -50,17 +50,10 @@ impl Engine {
         //The iterator can be shorter, in which case the rest of the memory is left as zeros.
         //If it is longer, the end is never read.
     {
-        let mut iter = state.into_iter();
+        let iter = state.into_iter();
         let mut memory = vec![0; MEMSIZE];
-        for i in 0..MEMSIZE {
-            match iter.next() {
-                Some(val) => {
-                    memory[i] = val;
-                }
-                _ => {
-                    break;
-                }
-            }
+        for (cell, val) in memory.iter_mut().zip(iter) {
+            *cell = val;
         }
         Self {
             memory,

@@ -40,7 +40,7 @@ fn rgb565_to_argb(rgb565: u16) -> (u8, u8, u8) {
     (r, g, b)
 }
 
-pub fn update_image_buffer(imbuff: &mut Vec<Color>, screen: &Vec<u16>) {
+pub fn update_image_buffer(imbuff: &mut [Color], screen: &[u16]) {
     for i in 0..RES * RES {
         let col = rgb565_to_argb(screen[i]);
         imbuff[i] = Color {

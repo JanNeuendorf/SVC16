@@ -17,8 +17,8 @@ impl Layout {
             false => ((minsize / 256.).floor() * 256.).max(256.),
             true => minsize.max(256.),
         };
-        let x = (0. as f32).max((width - image_size) / 2.);
-        let y = (0. as f32).max((height - image_size) / 2.);
+        let x = (0f32).max((width - image_size) / 2.);
+        let y = (0f32).max((height - image_size) / 2.);
         let font_y = y + image_size / 15.;
         Self {
             x,
