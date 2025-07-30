@@ -73,7 +73,7 @@ impl Engine {
         }
     }
     pub fn wants_to_sync(&self) -> bool {
-        return self.sync_called;
+        self.sync_called
     }
     pub fn set_input(&mut self, pos_code: u16, key_code: u16) {
         self.set(self.pos_code_dest, pos_code);
@@ -100,16 +100,16 @@ impl Engine {
 impl Engine {
     // Public for debugging.
     pub fn get(&self, index: u16) -> u16 {
-        return self.memory[index as usize];
+        self.memory[index as usize]
     }
     fn set(&mut self, index: u16, value: u16) {
         self.memory[index as usize] = value;
     }
     fn get_screen_buffer(&self, index: u16) -> u16 {
-        return self.screen_buffer[index as usize];
+        self.screen_buffer[index as usize]
     }
     fn get_utility_buffer(&self, index: u16) -> u16 {
-        return self.utility_buffer[index as usize];
+        self.utility_buffer[index as usize]
     }
     fn set_screen_buffer(&mut self, index: u16, value: u16) {
         self.screen_buffer[index as usize] = value;

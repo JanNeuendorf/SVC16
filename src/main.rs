@@ -20,7 +20,7 @@ fn window_conf() -> Conf {
     // Both the scaling and the fullscreen options are only important for the initial launch of the window.
     // You can still rescale or exit fullscreen mode.
     let cli = Cli::parse();
-    if cli.fullscreen {}
+    
 
     Conf {
         window_title: "SVC16".to_owned(),
