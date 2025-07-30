@@ -58,13 +58,13 @@ impl Engine {
         Self {
             memory: memory
                 .try_into()
-                .expect("failed to convert memory into boxed slice"),
+                .expect("failed to convert memory into boxed array"),
             screen_buffer: vec![0; MEMSIZE]
                 .try_into()
-                .expect("failed to convert screen buffer into boxed"),
+                .expect("failed to convert screen buffer into boxed array"),
             utility_buffer: vec![0; MEMSIZE]
                 .try_into()
-                .expect("failed to convert screen buffer into boxed"),
+                .expect("failed to convert screen buffer into boxed array"),
             instruction_pointer: 0,
             pos_code_dest: 0,
             key_code_dest: 0,
