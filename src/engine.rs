@@ -118,7 +118,13 @@ impl Engine {
         self.utility_buffer[index as usize] = value;
     }
     pub fn read_instruction(&self) -> [u16; 4] {
-        return [0, 1, 2, 3].map(|o| self.get(self.instruction_pointer.wrapping_add(o)));
+        let inst_ptr = self.instruction_pointer;
+        [
+            self.get(inst_ptr.wrapping_add(0)),
+            self.get(inst_ptr.wrapping_add(1)),
+            self.get(inst_ptr.wrapping_add(2)),
+            self.get(inst_ptr.wrapping_add(3)),
+        ]
     }
     fn advance_inst_ptr(&mut self) {
         self.instruction_pointer = self.instruction_pointer.wrapping_add(4);
