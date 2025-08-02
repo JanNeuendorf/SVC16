@@ -1,6 +1,8 @@
 use std::ops::{BitAnd, BitXor};
 use thiserror::Error;
 
+use crate::expansions::Expansion;
+
 pub const MEMSIZE: usize = u16::MAX as usize + 1;
 
 const SET: u16 = 0;
@@ -26,6 +28,7 @@ pub struct Engine {
     memory: Box<[u16; MEMSIZE]>,
     screen_buffer: Box<[u16; MEMSIZE]>,
     utility_buffer: Box<[u16; MEMSIZE]>,
+    expansion: Option<Box<dyn Expansion>>,
     instruction_pointer: u16,
     //These are the addreses that the input should be written to (as requested by Sync).
     pos_code_dest: u16,
@@ -44,7 +47,7 @@ pub enum EngineError {
 }
 
 impl Engine {
-    pub fn new<T>(state: T) -> Self
+    pub fn new<T>(state: T, mut expansion: Option<Box<dyn Expansion>>) -> Self
     where
         T: IntoIterator<Item = u16>,
         //The iterator can be shorter, in which case the rest of the memory is left as zeros.
@@ -55,6 +58,11 @@ impl Engine {
         for (cell, val) in memory.iter_mut().zip(iter) {
             *cell = val;
         }
+
+        if let Some(expansion) = expansion.as_mut() {
+            expansion.on_init();
+        }
+
         Self {
             memory: memory
                 .try_into()
@@ -65,6 +73,7 @@ impl Engine {
             utility_buffer: vec![0; MEMSIZE]
                 .try_into()
                 .expect("failed to convert screen buffer into boxed array"),
+            expansion,
             instruction_pointer: 0,
             pos_code_dest: 0,
             key_code_dest: 0,
@@ -92,8 +101,12 @@ impl Engine {
         }
         // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
         if self.expansion_triggered {
+            if let Some(expansion) = self.expansion.as_mut() {
+                expansion.expansion_triggered(&mut self.utility_buffer);
+            } else {
+                self.utility_buffer.fill(0);
+            }
             self.expansion_triggered = false;
-            self.utility_buffer.fill(0);
         }
     }
 }
