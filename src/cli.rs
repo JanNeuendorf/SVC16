@@ -37,4 +37,8 @@ pub struct Cli {
         help = "Use linear filtering (instead of pixel-perfect) this enables fractional scaling"
     )]
     pub linear_filtering: bool,
+
+    #[cfg(feature = "external-expansions")]
+    #[arg(long, short, help = "Expansion to load externally (.so .dll, etc.)")]
+    pub expansion: Option<std::path::PathBuf>,
 }
