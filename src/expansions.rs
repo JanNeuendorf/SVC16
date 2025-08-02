@@ -71,8 +71,8 @@ unsafe fn load_sym<'lib, P: AsRef<OsStr>, T>(
 impl ExternalExpansion {
     pub fn from_lib<P: AsRef<OsStr>>(path: &P) -> Result<Self, ExternalExpansionError> {
         unsafe {
-            let lib = Library::new(path).unwrap();
-            //.map_err(|_| ExternalExpansionError::FailedToLoadLibrary { path: path.into() })?;
+            let lib = Library::new(path)
+                .map_err(|_| ExternalExpansionError::FailedToLoadLibrary { path: path.into() })?;
 
             let sym_api_version: Symbol<unsafe extern "C" fn() -> usize> =
                 load_sym(&lib, path, b"svc16_expansion_api_version")?;
