@@ -28,6 +28,7 @@ pub struct Engine {
     memory: Box<[u16; MEMSIZE]>,
     screen_buffer: Box<[u16; MEMSIZE]>,
     utility_buffer: Box<[u16; MEMSIZE]>,
+    utility_back_buffer: Box<[u16; MEMSIZE]>,
     expansion: Option<Box<dyn Expansion>>,
     instruction_pointer: u16,
     //These are the addreses that the input should be written to (as requested by Sync).
@@ -70,6 +71,9 @@ impl Engine {
             screen_buffer: vec![0; MEMSIZE]
                 .try_into()
                 .expect("failed to convert screen buffer into boxed array"),
+            utility_back_buffer: vec![0; MEMSIZE]
+                .try_into()
+                .expect("failed to convert screen buffer into boxed array"),
             utility_buffer: vec![0; MEMSIZE]
                 .try_into()
                 .expect("failed to convert screen buffer into boxed array"),
@@ -102,8 +106,11 @@ impl Engine {
         // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
         if self.expansion_triggered {
             if let Some(expansion) = self.expansion.as_mut() {
-                expansion.expansion_triggered(&mut self.utility_buffer);
+                expansion.expansion_triggered(&mut self.utility_back_buffer);
+                self.utility_back_buffer
+                    .swap_with_slice(&mut self.utility_buffer[..]);
             } else {
+                self.utility_back_buffer.fill(0);
                 self.utility_buffer.fill(0);
             }
             self.expansion_triggered = false;
