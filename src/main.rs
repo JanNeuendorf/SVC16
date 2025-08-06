@@ -1,5 +1,6 @@
 mod cli;
 mod engine;
+mod expansions;
 mod ui;
 mod utils;
 #[allow(unused)] // Usage depends on Gamepad feature
@@ -7,20 +8,39 @@ use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use cli::Cli;
 use engine::Engine;
+use expansions::Expansion;
 #[cfg(feature = "gamepad")]
 use gilrs::Gilrs;
 use macroquad::prelude::*;
-use std::time::{Duration, Instant};
+use std::{
+    path::PathBuf,
+    sync::{Arc, LazyLock, Mutex},
+    time::{Duration, Instant},
+};
 use ui::Layout;
 use utils::*;
 const MAX_IPF: usize = 3000000; // Maximum instruction can be changed here for easier testing.
 const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
+#[cfg(feature = "external-expansions")]
+static EXPANSION_PATH: LazyLock<Arc<Mutex<Option<PathBuf>>>> =
+    LazyLock::new(|| Arc::new(Mutex::new(None)));
+
+#[cfg(feature = "external-expansions")]
+fn init_expansion_path(cli: &Cli) {
+    *EXPANSION_PATH
+        .lock()
+        .expect("failed to lock lazy static value during program setup") = cli.expansion.clone();
+}
+#[cfg(not(feature = "external-expansions"))]
+fn init_expansion_path(cli: &Cli) {}
+
 fn window_conf() -> Conf {
     // Both the scaling and the fullscreen options are only important for the initial launch of the window.
     // You can still rescale or exit fullscreen mode.
     let cli = Cli::parse();
-    
+
+    init_expansion_path(&cli);
 
     Conf {
         window_title: "SVC16".to_owned(),
@@ -31,6 +51,27 @@ fn window_conf() -> Conf {
         ..Default::default()
     }
 }
+
+#[cfg(feature = "external-expansions")]
+fn load_expansion() -> Result<Option<Box<dyn Expansion>>> {
+    if let Some(expansion_path) = EXPANSION_PATH
+        .as_ref()
+        .lock()
+        .expect("failed to lock lazy static value during program setup")
+        .as_ref()
+    {
+        Ok(Some(Box::new(expansions::ExternalExpansion::from_lib(
+            &expansion_path,
+        )?)))
+    } else {
+        Ok(None)
+    }
+}
+#[cfg(not(feature = "external-expansions"))]
+fn load_expansion() -> Result<Option<Box<dyn Expansion>>> {
+    Ok(None)
+}
+
 #[macroquad::main(window_conf)]
 async fn main() -> Result<()> {
     let mut cli = Cli::parse();
@@ -50,7 +91,7 @@ async fn main() -> Result<()> {
 
     // This is not the screen-buffer itself. It still needs to be synchronized.
     let mut raw_buffer = vec![0u16; 256 * 256];
-    let mut engine = Engine::new(read_u16s_from_file(&cli.program)?);
+    let mut engine = Engine::new(read_u16s_from_file(&cli.program)?, load_expansion()?);
     let mut paused = false;
     let mut ipf = 0;
 
@@ -70,7 +111,7 @@ async fn main() -> Result<()> {
         }
         if is_key_pressed(KeyCode::R) {
             // The current behavior is reloading the file and unpausing.
-            engine = Engine::new(read_u16s_from_file(&cli.program)?);
+            engine = Engine::new(read_u16s_from_file(&cli.program)?, load_expansion()?);
             paused = false;
         }
         if is_key_pressed(KeyCode::V) {
