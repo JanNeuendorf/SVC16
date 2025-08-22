@@ -1,6 +1,6 @@
+use rand::Rng;
 use std::ops::{BitAnd, BitXor};
 use thiserror::Error;
-
 pub const MEMSIZE: usize = u16::MAX as usize + 1;
 
 const SET: u16 = 0;
@@ -31,7 +31,8 @@ pub struct Engine {
     pos_code_dest: u16,
     key_code_dest: u16,
     sync_called: bool,
-    expansion_triggered: bool,
+    extension_triggered: bool,
+    extension: Box<dyn Extension>,
 }
 
 #[derive(Debug, Error)]
@@ -44,7 +45,7 @@ pub enum EngineError {
 }
 
 impl Engine {
-    pub fn new<T>(state: T) -> Self
+    pub fn new<T>(state: T, e: Box<dyn Extension>) -> Self
     where
         T: IntoIterator<Item = u16>,
         //The iterator can be shorter, in which case the rest of the memory is left as zeros.
@@ -69,8 +70,34 @@ impl Engine {
             pos_code_dest: 0,
             key_code_dest: 0,
             sync_called: false,
-            expansion_triggered: false,
+            extension_triggered: false,
+            extension: e,
         }
+    }
+    pub fn reset<T>(&mut self, state: T)
+    where
+        T: IntoIterator<Item = u16>,
+    {
+        let iter = state.into_iter();
+        let mut memory = vec![0; MEMSIZE];
+        for (cell, val) in memory.iter_mut().zip(iter) {
+            *cell = val;
+        }
+        self.memory = memory
+            .try_into()
+            .expect("failed to convert memory into boxed array");
+        self.screen_buffer = vec![0; MEMSIZE]
+            .try_into()
+            .expect("failed to convert screen buffer into boxed array");
+        self.utility_buffer = vec![0; MEMSIZE]
+            .try_into()
+            .expect("failed to convert screen buffer into boxed array");
+        self.instruction_pointer = 0;
+        self.pos_code_dest = 0;
+        self.key_code_dest = 0;
+        self.sync_called = false;
+        self.extension_triggered = false;
+        self.extension.reset();
     }
     pub fn wants_to_sync(&self) -> bool {
         self.sync_called
@@ -90,10 +117,12 @@ impl Engine {
             self.sync_called = false;
             self.set_input(pos_code, key_code);
         }
-        // Even if no expansion is active, triggering the mechanism must still clear the utility buffer.
-        if self.expansion_triggered {
-            self.expansion_triggered = false;
-            self.utility_buffer.fill(0);
+        if self.extension_triggered {
+            let out = self.extension.output();
+            self.extension.read_ubuff(&*self.utility_buffer);
+            self.utility_buffer = out;
+            self.extension.run();
+            self.extension_triggered = false;
         }
     }
 }
@@ -233,12 +262,31 @@ impl Engine {
                 self.pos_code_dest = arg1;
                 self.key_code_dest = arg2;
                 if arg3 > 0 {
-                    self.expansion_triggered = true;
+                    self.extension_triggered = true;
                 }
                 self.advance_inst_ptr();
             }
             _ => return Err(EngineError::InvalidInstruction(opcode)),
         }
         Ok(None)
+    }
+}
+pub trait Extension {
+    fn read_ubuff(&mut self, _ubuff: &[u16]) {}
+    fn output(&self) -> Box<[u16; MEMSIZE]> {
+        Box::new([0_u16; MEMSIZE])
+    }
+    fn run(&mut self) {}
+    fn reset(&mut self) {}
+}
+pub struct NoExtension;
+impl Extension for NoExtension {}
+
+pub struct RandomExtension;
+impl Extension for RandomExtension {
+    fn output(&self) -> Box<[u16; MEMSIZE]> {
+        let mut rng = rand::rng();
+        let r = [0; MEMSIZE].map(|_| rng.random::<u16>());
+        Box::new(r)
     }
 }

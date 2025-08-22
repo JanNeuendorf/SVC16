@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -37,4 +37,17 @@ pub struct Cli {
         help = "Use linear filtering (instead of pixel-perfect) this enables fractional scaling"
     )]
     pub linear_filtering: bool,
+    #[arg(
+        long,
+        short,
+        default_value = "none",
+        help = "The activated (builtin) extension"
+    )]
+    pub extension: ActiveExtension,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum ActiveExtension {
+    None,
+    Random,
 }
