@@ -2,7 +2,7 @@ use rand::Rng;
 use std::ops::{BitAnd, BitXor};
 use thiserror::Error;
 pub const MEMSIZE: usize = u16::MAX as usize + 1;
-use rodio::{OutputStream, Source};
+use rodio::{OutputStream, Sink, Source};
 
 const SET: u16 = 0;
 const GOTO: u16 = 1;
@@ -99,6 +99,12 @@ impl Engine {
         self.sync_called = false;
         self.extension_triggered = false;
         self.extension.reset();
+    }
+    pub fn pause(&mut self) {
+        self.extension.pause();
+    }
+    pub fn resume(&mut self) {
+        self.extension.resume();
     }
     pub fn wants_to_sync(&self) -> bool {
         self.sync_called
@@ -279,6 +285,8 @@ pub trait Extension {
     }
     fn run(&mut self) {}
     fn reset(&mut self) {}
+    fn pause(&mut self) {}
+    fn resume(&mut self) {}
 }
 pub struct NoExtension;
 impl Extension for NoExtension {}
@@ -337,6 +345,7 @@ impl Source16 {
 pub struct SoundExtension {
     stream: OutputStream,
     samples: Vec<u16>,
+    sinks: Vec<Sink>,
 }
 impl SoundExtension {
     pub fn new() -> Self {
@@ -346,6 +355,7 @@ impl SoundExtension {
         Self {
             stream,
             samples: vec![],
+            sinks: vec![],
         }
     }
 }
@@ -362,10 +372,22 @@ impl Extension for SoundExtension {
         #[allow(clippy::all)]
         let sink = rodio::Sink::connect_new(&self.stream.mixer());
         sink.append(Source16::new(&self.samples));
-        sink.detach();
+        self.sinks.push(sink);
     }
 
     fn reset(&mut self) {
         *self = Self::new()
+    }
+
+    fn pause(&mut self) {
+        for s in &self.sinks {
+            s.pause();
+        }
+    }
+
+    fn resume(&mut self) {
+        for s in &self.sinks {
+            s.play();
+        }
     }
 }

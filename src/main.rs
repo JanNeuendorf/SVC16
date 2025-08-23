@@ -74,6 +74,11 @@ async fn main() -> Result<()> {
         }
         if is_key_pressed(KeyCode::P) {
             paused = !paused;
+            if paused {
+                engine.pause();
+            } else {
+                engine.resume();
+            }
         }
         if is_key_pressed(KeyCode::R) {
             // The current behavior is reloading the file and unpausing.
