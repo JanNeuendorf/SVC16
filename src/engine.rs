@@ -1,8 +1,8 @@
-use rand::Rng;
 use std::ops::{BitAnd, BitXor};
 use thiserror::Error;
 pub const MEMSIZE: usize = u16::MAX as usize + 1;
-use rodio::{OutputStream, Sink, Source};
+
+use crate::expansions::Expansion;
 
 const SET: u16 = 0;
 const GOTO: u16 = 1;
@@ -32,8 +32,8 @@ pub struct Engine {
     pos_code_dest: u16,
     key_code_dest: u16,
     sync_called: bool,
-    extension_triggered: bool,
-    extension: Box<dyn Extension>,
+    expansion_triggered: bool,
+    expansion: Box<dyn Expansion>,
 }
 
 #[derive(Debug, Error)]
@@ -46,7 +46,7 @@ pub enum EngineError {
 }
 
 impl Engine {
-    pub fn new<T>(state: T, e: Box<dyn Extension>) -> Self
+    pub fn new<T>(state: T, e: Box<dyn Expansion>) -> Self
     where
         T: IntoIterator<Item = u16>,
         //The iterator can be shorter, in which case the rest of the memory is left as zeros.
@@ -71,8 +71,8 @@ impl Engine {
             pos_code_dest: 0,
             key_code_dest: 0,
             sync_called: false,
-            extension_triggered: false,
-            extension: e,
+            expansion_triggered: false,
+            expansion: e,
         }
     }
     pub fn reset<T>(&mut self, state: T)
@@ -97,14 +97,14 @@ impl Engine {
         self.pos_code_dest = 0;
         self.key_code_dest = 0;
         self.sync_called = false;
-        self.extension_triggered = false;
-        self.extension.reset();
+        self.expansion_triggered = false;
+        self.expansion.reset();
     }
     pub fn pause(&mut self) {
-        self.extension.pause();
+        self.expansion.pause();
     }
     pub fn resume(&mut self) {
-        self.extension.resume();
+        self.expansion.resume();
     }
     pub fn wants_to_sync(&self) -> bool {
         self.sync_called
@@ -124,12 +124,12 @@ impl Engine {
             self.sync_called = false;
             self.set_input(pos_code, key_code);
         }
-        if self.extension_triggered {
-            let out = self.extension.output();
-            self.extension.read_ubuff(&*self.utility_buffer);
+        if self.expansion_triggered {
+            let out = self.expansion.output();
+            self.expansion.read_ubuff(&*self.utility_buffer);
             self.utility_buffer = out;
-            self.extension.run();
-            self.extension_triggered = false;
+            self.expansion.run();
+            self.expansion_triggered = false;
         }
     }
 }
@@ -269,125 +269,12 @@ impl Engine {
                 self.pos_code_dest = arg1;
                 self.key_code_dest = arg2;
                 if arg3 > 0 {
-                    self.extension_triggered = true;
+                    self.expansion_triggered = true;
                 }
                 self.advance_inst_ptr();
             }
             _ => return Err(EngineError::InvalidInstruction(opcode)),
         }
         Ok(None)
-    }
-}
-pub trait Extension {
-    fn read_ubuff(&mut self, _ubuff: &[u16]) {}
-    fn output(&self) -> Box<[u16; MEMSIZE]> {
-        Box::new([0_u16; MEMSIZE])
-    }
-    fn run(&mut self) {}
-    fn reset(&mut self) {}
-    fn pause(&mut self) {}
-    fn resume(&mut self) {}
-}
-pub struct NoExtension;
-impl Extension for NoExtension {}
-
-pub struct RandomExtension;
-impl Extension for RandomExtension {
-    fn output(&self) -> Box<[u16; MEMSIZE]> {
-        let mut rng = rand::rng();
-        let r = [0; MEMSIZE].map(|_| rng.random::<u16>());
-        Box::new(r)
-    }
-}
-
-pub struct Source16 {
-    samples: std::vec::IntoIter<f32>,
-}
-impl Iterator for Source16 {
-    type Item = f32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.samples.next()
-    }
-}
-impl Source for Source16 {
-    fn current_span_len(&self) -> Option<usize> {
-        None
-    }
-
-    fn channels(&self) -> rodio::ChannelCount {
-        1
-    }
-
-    fn sample_rate(&self) -> rodio::SampleRate {
-        16000
-    }
-
-    fn total_duration(&self) -> Option<std::time::Duration> {
-        None
-    }
-}
-
-impl Source16 {
-    fn new(input: &[u16]) -> Self {
-        let mut v = vec![];
-        for u in input {
-            let i = i16::from_ne_bytes(u.to_ne_bytes());
-            let f = ((i as f32) / (32_768.0)).clamp(-1., 1.);
-            v.push(f)
-        }
-        Self {
-            samples: v.into_iter(),
-        }
-    }
-}
-
-pub struct SoundExtension {
-    stream: OutputStream,
-    samples: Vec<u16>,
-    sinks: Vec<Sink>,
-}
-impl SoundExtension {
-    pub fn new() -> Self {
-        let mut stream = rodio::OutputStreamBuilder::open_default_stream()
-            .expect("could not open default audio stream");
-        stream.log_on_drop(false);
-        Self {
-            stream,
-            samples: vec![],
-            sinks: vec![],
-        }
-    }
-}
-impl Extension for SoundExtension {
-    fn read_ubuff(&mut self, _ubuff: &[u16]) {
-        self.samples = _ubuff.to_vec();
-    }
-
-    fn output(&self) -> Box<[u16; MEMSIZE]> {
-        Box::new([0_u16; MEMSIZE])
-    }
-
-    fn run(&mut self) {
-        #[allow(clippy::all)]
-        let sink = rodio::Sink::connect_new(&self.stream.mixer());
-        sink.append(Source16::new(&self.samples));
-        self.sinks.push(sink);
-    }
-
-    fn reset(&mut self) {
-        *self = Self::new()
-    }
-
-    fn pause(&mut self) {
-        for s in &self.sinks {
-            s.pause();
-        }
-    }
-
-    fn resume(&mut self) {
-        for s in &self.sinks {
-            s.play();
-        }
     }
 }
