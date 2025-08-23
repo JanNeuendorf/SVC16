@@ -41,13 +41,14 @@ pub struct Cli {
         long,
         short,
         default_value = "none",
-        help = "The activated (builtin) extension"
+        help = "The activated (builtin) expansion"
     )]
-    pub extension: ActiveExtension,
+    pub expansion: ActiveExpansion,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
-pub enum ActiveExtension {
+pub enum ActiveExpansion {
     None,
     Random,
+    Sound,
 }

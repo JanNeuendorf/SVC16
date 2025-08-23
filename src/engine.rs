@@ -1,7 +1,8 @@
-use rand::Rng;
 use std::ops::{BitAnd, BitXor};
 use thiserror::Error;
 pub const MEMSIZE: usize = u16::MAX as usize + 1;
+
+use crate::expansions::Expansion;
 
 const SET: u16 = 0;
 const GOTO: u16 = 1;
@@ -31,8 +32,8 @@ pub struct Engine {
     pos_code_dest: u16,
     key_code_dest: u16,
     sync_called: bool,
-    extension_triggered: bool,
-    extension: Box<dyn Extension>,
+    expansion_triggered: bool,
+    expansion: Box<dyn Expansion>,
 }
 
 #[derive(Debug, Error)]
@@ -45,7 +46,7 @@ pub enum EngineError {
 }
 
 impl Engine {
-    pub fn new<T>(state: T, e: Box<dyn Extension>) -> Self
+    pub fn new<T>(state: T, e: Box<dyn Expansion>) -> Self
     where
         T: IntoIterator<Item = u16>,
         //The iterator can be shorter, in which case the rest of the memory is left as zeros.
@@ -70,8 +71,8 @@ impl Engine {
             pos_code_dest: 0,
             key_code_dest: 0,
             sync_called: false,
-            extension_triggered: false,
-            extension: e,
+            expansion_triggered: false,
+            expansion: e,
         }
     }
     pub fn reset<T>(&mut self, state: T)
@@ -96,8 +97,14 @@ impl Engine {
         self.pos_code_dest = 0;
         self.key_code_dest = 0;
         self.sync_called = false;
-        self.extension_triggered = false;
-        self.extension.reset();
+        self.expansion_triggered = false;
+        self.expansion.reset();
+    }
+    pub fn pause(&mut self) {
+        self.expansion.pause();
+    }
+    pub fn resume(&mut self) {
+        self.expansion.resume();
     }
     pub fn wants_to_sync(&self) -> bool {
         self.sync_called
@@ -117,12 +124,12 @@ impl Engine {
             self.sync_called = false;
             self.set_input(pos_code, key_code);
         }
-        if self.extension_triggered {
-            let out = self.extension.output();
-            self.extension.read_ubuff(&*self.utility_buffer);
+        if self.expansion_triggered {
+            let out = self.expansion.output();
+            self.expansion.read_ubuff(&*self.utility_buffer);
             self.utility_buffer = out;
-            self.extension.run();
-            self.extension_triggered = false;
+            self.expansion.run();
+            self.expansion_triggered = false;
         }
     }
 }
@@ -262,31 +269,12 @@ impl Engine {
                 self.pos_code_dest = arg1;
                 self.key_code_dest = arg2;
                 if arg3 > 0 {
-                    self.extension_triggered = true;
+                    self.expansion_triggered = true;
                 }
                 self.advance_inst_ptr();
             }
             _ => return Err(EngineError::InvalidInstruction(opcode)),
         }
         Ok(None)
-    }
-}
-pub trait Extension {
-    fn read_ubuff(&mut self, _ubuff: &[u16]) {}
-    fn output(&self) -> Box<[u16; MEMSIZE]> {
-        Box::new([0_u16; MEMSIZE])
-    }
-    fn run(&mut self) {}
-    fn reset(&mut self) {}
-}
-pub struct NoExtension;
-impl Extension for NoExtension {}
-
-pub struct RandomExtension;
-impl Extension for RandomExtension {
-    fn output(&self) -> Box<[u16; MEMSIZE]> {
-        let mut rng = rand::rng();
-        let r = [0; MEMSIZE].map(|_| rng.random::<u16>());
-        Box::new(r)
     }
 }

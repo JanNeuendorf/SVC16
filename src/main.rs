@@ -1,5 +1,6 @@
 mod cli;
 mod engine;
+mod expansions;
 mod ui;
 mod utils;
 #[allow(unused)] // Usage depends on Gamepad feature
@@ -14,7 +15,7 @@ use std::time::{Duration, Instant};
 use ui::Layout;
 use utils::*;
 
-use crate::engine::{Extension, NoExtension, RandomExtension};
+use expansions::{Expansion, NoExpansion, RandomExpansion, SoundExpansion};
 const MAX_IPF: usize = 3000000; // Maximum instruction can be changed here for easier testing.
 const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
@@ -52,11 +53,12 @@ async fn main() -> Result<()> {
     // This is not the screen-buffer itself. It still needs to be synchronized.
     let mut raw_buffer = vec![0u16; 256 * 256];
 
-    let extension: Box<dyn Extension> = match cli.extension {
-        cli::ActiveExtension::None => Box::new(NoExtension),
-        cli::ActiveExtension::Random => Box::new(RandomExtension),
+    let expansion: Box<dyn Expansion> = match cli.expansion {
+        cli::ActiveExpansion::None => Box::new(NoExpansion),
+        cli::ActiveExpansion::Random => Box::new(RandomExpansion),
+        cli::ActiveExpansion::Sound => Box::new(SoundExpansion::new()),
     };
-    let mut engine = Engine::new(read_u16s_from_file(&cli.program)?, extension);
+    let mut engine = Engine::new(read_u16s_from_file(&cli.program)?, expansion);
     let mut paused = false;
     let mut ipf = 0;
 
@@ -73,6 +75,11 @@ async fn main() -> Result<()> {
         }
         if is_key_pressed(KeyCode::P) {
             paused = !paused;
+            if paused {
+                engine.pause();
+            } else {
+                engine.resume();
+            }
         }
         if is_key_pressed(KeyCode::R) {
             // The current behavior is reloading the file and unpausing.
