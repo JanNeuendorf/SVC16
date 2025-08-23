@@ -2,7 +2,7 @@ use rand::Rng;
 use std::ops::{BitAnd, BitXor};
 use thiserror::Error;
 pub const MEMSIZE: usize = u16::MAX as usize + 1;
-use rodio::{Sink, Source};
+use rodio::{OutputStream, Source};
 
 const SET: u16 = 0;
 const GOTO: u16 = 1;
@@ -335,16 +335,16 @@ impl Source16 {
 }
 
 pub struct SoundExtension {
-    sink: Sink,
+    stream: OutputStream,
     samples: Vec<u16>,
 }
 impl SoundExtension {
     pub fn new() -> Self {
-        let stream = rodio::OutputStreamBuilder::open_default_stream()
+        let mut stream = rodio::OutputStreamBuilder::open_default_stream()
             .expect("could not open default audio stream");
-        let sink = rodio::Sink::connect_new(stream.mixer());
+        stream.log_on_drop(false);
         Self {
-            sink,
+            stream,
             samples: vec![],
         }
     }
@@ -359,9 +359,10 @@ impl Extension for SoundExtension {
     }
 
     fn run(&mut self) {
-        self.sink.stop();
-        self.sink.append(Source16::new(&self.samples));
-        self.sink.play();
+        #[allow(clippy::all)]
+        let sink = rodio::Sink::connect_new(&self.stream.mixer());
+        sink.append(Source16::new(&self.samples));
+        sink.detach();
     }
 
     fn reset(&mut self) {
