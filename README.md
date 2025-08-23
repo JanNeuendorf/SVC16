@@ -16,7 +16,7 @@ There are three primary goals:
 This repo contains an emulator to run games or programs. It can be installed with cargo:
 
 ```sh
-cargo install --git https://github.com/JanNeuendorf/SVC16
+cargo install --git https://github.com/JanNeuendorf/SVC16 --locked
 ```
 
 > [!NOTE]
@@ -206,6 +206,4 @@ If you find a discrepancy between the specifications and the behavior of the emu
 feel free to open an issue. Please report things that are not explained well.
 
 
-### Task List
 
-- [ ] Test the reference emulator on different platforms
