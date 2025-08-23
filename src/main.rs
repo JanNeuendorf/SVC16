@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 use ui::Layout;
 use utils::*;
 
-use crate::engine::{Extension, NoExtension, RandomExtension};
+use crate::engine::{Extension, NoExtension, RandomExtension, SoundExtension};
 const MAX_IPF: usize = 3000000; // Maximum instruction can be changed here for easier testing.
 const FRAMETIME: Duration = Duration::from_nanos((1000000000. / 30.) as u64);
 
@@ -55,6 +55,7 @@ async fn main() -> Result<()> {
     let extension: Box<dyn Extension> = match cli.extension {
         cli::ActiveExtension::None => Box::new(NoExtension),
         cli::ActiveExtension::Random => Box::new(RandomExtension),
+        cli::ActiveExtension::Sound => Box::new(SoundExtension::new()),
     };
     let mut engine = Engine::new(read_u16s_from_file(&cli.program)?, extension);
     let mut paused = false;

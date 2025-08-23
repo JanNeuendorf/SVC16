@@ -50,4 +50,5 @@ pub struct Cli {
 pub enum ActiveExtension {
     None,
     Random,
+    Sound,
 }
