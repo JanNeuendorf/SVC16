@@ -116,7 +116,7 @@ In the following table, all instructions are listed. `@arg1` refers to the value
 | 12     | **Read**  | yes        | Copies `index=@arg1` of buffer `arg3` to `@arg2`                             |
 | 13     | **Band**  | yes        | `@arg3=@arg1&@arg2`                                                          |
 | 14     | **Xor**   | yes        | `@arg3=@arg1^@arg2`                                                          |
-| 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order. If arg3!=0, a sound is played. |
+| 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order. If `arg3!=0`, a sound is played. |
 
 
 
