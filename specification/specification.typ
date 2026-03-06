@@ -43,7 +43,7 @@ The biggest secondary goal is to design a system that behaves the same everywher
 The question of how the emulation is run should never matter to the person writing the program or game.
 This means there can be no features that might only be available in one implementation.
 It also means that the performance characteristics must be the same.
-An emulator can either run the system at the intended speed, or it can not.
+An emulator either runs the system at the intended speed or it does not.
 
 = General Principles
 
@@ -103,7 +103,7 @@ The sound buffer is left filled with zeros.
 
 
 #not-specified[
-  There is no guarantee that the audio playback is perfectly syncronized with the rest of the system once a sound has been dispatched.
+  There is no guarantee that the audio playback is perfectly synchronized with the rest of the system once a sound has been dispatched.
 ]
 
 
@@ -226,7 +226,7 @@ If the opcode is greater than 15, the system will abort.
   [14], [*Xor*], [`@arg3=@arg1^@arg2` (binary exclusive or)],
   [15],
   [*Sync*],
-  [Puts `@arg1=position_code`, `@arg2=key_code` and synchronizes (in that order).If arg3!=0, it also triggers the sound buffer to be played.],
+  [Puts `@arg1=position_code`, `@arg2=key_code` and synchronizes (in that order). If arg3!=0, it also triggers the sound buffer to be played.],
 )
 
 #figure(
@@ -268,12 +268,12 @@ There are only two ways the program can fail (for internal reasons).
 - It tries to execute an instruction with an opcode greater than 15.
 
 In both cases, the execution of the program is stopped. It is not restarted automatically.
-(So you can not cause an error to restart a game.)
+(So you cannot cause an error to restart a game.)
 There is intentionally no way of restarting or even quitting a program from within.
 
 #not-specified[
   - There is no rule for how (or even if) the cause of the exception is reported.
-  - It is not guaranteed that the emulator itself closes if an exception occurs. (So you can not use it to quit a program.)
+  - It is not guaranteed that the emulator itself closes if an exception occurs. (So you cannot use it to quit a program.)
 ]
 
 
