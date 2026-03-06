@@ -12,7 +12,7 @@ There are three primary goals:
 
 
 
-This repo contains an emulator to run games or programs. It can be installed from the releases section or compiled using odin
+This repo contains an emulator to run games or programs. It can be installed from the releases section or compiled using odin.
 
 
 I do not want to provide an assembler, any kind of compiler, or even any ideas about things like call conventions.
