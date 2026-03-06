@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    sodipodi:docname="sketch.svg"
-   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,10 +24,10 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="2.5947418"
-     inkscape:cx="106.75436"
-     inkscape:cy="179.01589"
-     inkscape:window-width="3440"
-     inkscape:window-height="1379"
+     inkscape:cx="106.56166"
+     inkscape:cy="178.82319"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -293,7 +293,7 @@
        id="tspan6"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Mono';-inkscape-font-specification:'Fira Mono Bold';letter-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.35"
        x="6.6575131"
-       y="61.570644">Utility-buffer</tspan></text>
+       y="61.570644">Sound-buffer</tspan></text>
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.349999;stroke-linecap:round;stroke-opacity:1"
      id="rect1"
