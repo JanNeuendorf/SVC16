@@ -9,26 +9,11 @@ There are three primary goals:
 
 - **Simplicity**: It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it. That does not mean that it is as simple and elegant as it could possibly be, just that it is easy to understand how the system should behave.  
 - **Reproducibility**: The system is fully specified. Programs should run and perform the same everywhere.  
-- **Expandability**: There is a protocol for adding features without breaking changes.
 
 
 
-This repo contains an emulator to run games or programs. It can be installed with cargo:
+This repo contains an emulator to run games or programs. It can be installed from the releases section or compiled using odin.
 
-```sh
-cargo install --git https://github.com/JanNeuendorf/SVC16 --locked
-```
-
-> [!NOTE]
-> For controller support, compile with `--features="gamepad"`. Support varies by platform and it might require additional libraries to be installed. 
-
-You can then run a program from the cli:
-
-```sh
-svc16 /path/to/my_rom.svc16
-```
-
-Use `--help` to get a list of available subcommands.
 
 I do not want to provide an assembler, any kind of compiler, or even any ideas about things like call conventions.
 The idea is that you have to build that yourself. You can play a game from the example folder to get an idea of what can be built.
@@ -49,7 +34,6 @@ There are no CPU registers, just one chunk of memory. Values can be loaded from 
 ### Everything is an unsigned 16-bit integer
 Everything is represented as an unsigned 16-bit integer. That includes numbers, addresses, colors, the instruction pointer and the input. 
 
-
 ### Wrapping Arithmetic
 All numerical operations are wrapping operations.
 
@@ -59,7 +43,7 @@ The screen-buffer is the same size as the memory and there is one pixel for ever
 
 ### No Fluff
 There are as few features as possible.
-That means limited input, no sound, no variable display size etc.
+That means limited input, no file system access, no variable display size etc.
 It also means that there are no accelerators or tricks to help with performance.
 
 ### Setup
@@ -79,6 +63,10 @@ The screen has a resolution of $256*256=2^{16}$ pixels. The color of each pixel 
 
 The coordinate $(x,y)$ of the screen maps to the index $256y+x$ in the screen-buffer. The coordinate $(0,0)$ is in the upper left-hand corner. Changes to the screen-buffer are not reflected on the screen until the system is synchronized.
 
+### Sound
+
+Sounds can be played by constructing a waveform in the sound buffer. There are no built-in samples.
+
 ### Input
 
 <div align="left"> 
@@ -88,8 +76,6 @@ The coordinate $(x,y)$ of the screen maps to the index $256y+x$ in the screen-bu
 The only supported inputs are the mouse position and a list of eight keys. 
 These keys are supposed to represent the face buttons of an NES controller.
 The codes for the **A** and **B** keys also represent the left and right mouse buttons.
-
-
 
 
 ### Synchronization
@@ -130,7 +116,7 @@ In the following table, all instructions are listed. `@arg1` refers to the value
 | 12     | **Read**  | yes        | Copies `index=@arg1` of buffer `arg3` to `@arg2`                             |
 | 13     | **Band**  | yes        | `@arg3=@arg1&@arg2`                                                          |
 | 14     | **Xor**   | yes        | `@arg3=@arg1^@arg2`                                                          |
-| 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order. If arg3!=0, it triggers the expansion port mechanism. |
+| 15     | **Sync**  | yes        | Puts `@arg1=position_code`,  `@arg2=key_code` and synchronizes in that order. If arg3!=0, a sound is played. |
 
 
 
