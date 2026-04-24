@@ -1,7 +1,7 @@
 package main
 import "core:fmt"
 import "core:mem"
-import "core:os"
+import os "core:os/old"
 import rl "vendor:raylib"
 
 

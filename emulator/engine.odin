@@ -6,7 +6,7 @@ import "core:encoding/endian"
 import "core:fmt"
 import "core:math"
 import "core:mem"
-import "core:os"
+import os "core:os/old"
 import "core:strings"
 
 MAXINST :: 3000000
