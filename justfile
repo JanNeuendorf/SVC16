@@ -1,4 +1,4 @@
-semver:="2.0"
+semver:="2.1"
 release_spec:
     -mkdir {{justfile_dir()}}/releases
     typst compile specification/specification.typ {{justfile_dir()}}/releases/specification_{{semver}}.pdf --input semver={{semver}}
