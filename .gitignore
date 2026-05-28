@@ -2,3 +2,4 @@
 *.pdf
 # A folder for the releases
 releases
+.DS_Store

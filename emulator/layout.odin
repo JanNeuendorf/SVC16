@@ -180,7 +180,7 @@ SetGuiProps :: proc() {
 		i32(rl.GuiControlProperty.BORDER_COLOR_PRESSED),
 		focused_dark,
 	)
-	rl.SetWindowMinSize(1000, 1000)
+	rl.SetWindowMinSize(1000, 800)
 }
 
 DrawError :: proc(layout: GlobalLayout, event: EngineEvent, frame: int) {

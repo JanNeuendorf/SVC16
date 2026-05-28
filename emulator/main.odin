@@ -28,9 +28,9 @@ Mode :: enum {
 
 
 main :: proc() {
-	flag := rl.ConfigFlag.WINDOW_RESIZABLE
+	flag1 := rl.ConfigFlag.WINDOW_RESIZABLE
 	flag2 := rl.ConfigFlag.WINDOW_HIGHDPI
-	rl.SetConfigFlags(rl.ConfigFlags{flag,flag2})
+	rl.SetConfigFlags(rl.ConfigFlags{flag1,flag2})
 	rl.SetTraceLogLevel(rl.TraceLogLevel.WARNING)
 
 	rl.InitWindow(1000, 1000, "SVC16")
