@@ -1,5 +1,4 @@
-package main
-import "core:fmt"
+package game
 import "core:slice"
 import rl "vendor:raylib"
 
@@ -73,4 +72,3 @@ hash_u16 :: proc(u: u16) -> (u8, u8, u8) {
 	new := (u * mul) ~ xor
 	return rgb556_to_argb(new)
 }
-

@@ -1,5 +1,4 @@
-package main
-import "core:fmt"
+package game
 import rl "vendor:raylib"
 
 //ToDo Gamepad input
@@ -50,4 +49,3 @@ GetInputCode :: proc(posX, posY, wh: f32) -> [2]u16 {
 
 	return {mouse_code, key_code}
 }
-

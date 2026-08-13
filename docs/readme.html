@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		:root {
+			--bg-color: #323232;
+			--text-color: #f3f4f6;
+			--text-muted: #9ca3af;
+			--accent-color: #38bdf8;
+			--link-color: #a82b9b;
+			--container-border: #444444;
+			--code-bg: #222222;
+			--font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+		}
+
+		body {
+			margin: 0;
+			padding: 10px 0 30px 0;
+			background-color: var(--bg-color);
+			color: var(--text-color);
+			font-family: var(--font-family);
+			font-size: 0.85rem;
+			line-height: 1.6;
+			box-sizing: border-box;
+		}
+
+		h1, h2, h3, h4 {
+			color: #ffffff;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			margin-top: 1.5em;
+			margin-bottom: 0.5em;
+			border-bottom: 1px solid var(--container-border);
+			padding-bottom: 4px;
+		}
+
+		h1 { font-size: 1.25rem; border-bottom: 2px solid var(--container-border); }
+		h2 { font-size: 1.05rem; }
+		h3 { font-size: 0.95rem; border-bottom: none; }
+
+		a {
+			color: var(--link-color);
+			text-decoration: none;
+			font-weight: 700;
+		}
+
+		a:hover {
+			color: #ffffff;
+		}
+
+		p {
+			margin: 0.8em 0;
+		}
+
+		ul, ol {
+			padding-left: 20px;
+			margin: 0.8em 0;
+		}
+
+		li {
+			margin: 0.4em 0;
+		}
+
+		table {
+			display: block;
+			width: 100%;
+			overflow-x: auto;
+			border-collapse: collapse;
+			margin: 1em 0;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		th, td {
+			border: 1px solid var(--container-border);
+			padding: 6px 10px;
+			text-align: left;
+		}
+
+		th {
+			background-color: #262626;
+			color: #ffffff;
+		}
+
+		code {
+			background-color: var(--code-bg);
+			border: 1px solid var(--container-border);
+			padding: 2px 6px;
+			font-size: 0.8rem;
+			color: #38bdf8;
+		}
+
+		pre {
+			background-color: var(--code-bg);
+			border: 1px solid var(--container-border);
+			padding: 12px;
+			overflow-x: auto;
+		}
+
+		pre code {
+			background: none;
+			border: none;
+			padding: 0;
+		}
+
+		blockquote {
+			margin: 1em 0;
+			padding: 10px 14px;
+			background-color: #272727;
+			border-left: 4px solid var(--accent-color);
+			color: var(--text-muted);
+		}
+
+		img {
+			max-width: 100%;
+			height: auto;
+			display: block;
+			margin: 12px auto;
+			border: 1px solid var(--container-border);
+		}
+
+		img[src*="sketch.svg"] {
+			filter: invert(0.85) hue-rotate(180deg) contrast(0.95);
+		}
+	</style>
+</head>
+<body>
+<p>This is the specification for an extremely simple "virtual computer" that can be emulated.</p>
+<p>There are two primary goals:</p>
+<ul>
+<li><strong>Simplicity</strong>: It should be simple to understand every instruction, to write machine code that runs on it, and to write a compiler for it. That does not mean that it is as simple and elegant as it could possibly be, just that it is easy to understand how the system should behave.  </li>
+<li><strong>Reproducibility</strong>: The system is fully specified. Programs should run and perform the same everywhere.  </li>
+</ul>
+<!-- <p>This repo contains an emulator to run games or programs. It can be installed from the releases section or compiled using odin.</p> -->
+<p>I do not want to provide an assembler, any kind of compiler, or even any ideas about things like call conventions.
+The idea is that you have to build that yourself. You can play the example game above to get an idea of what can be built.</p>
+<!-- <div align="center"> -->
+<!-- <img src="assets/spikeavoider.gif" alt="Logo" width="400"/> -->
+
+  <!-- </div> -->
+
+<h2>Quick Overview</h2>
+<blockquote>
+<p>[!WARNING]
+ For a complete description of the system, please download the <a href="/assets/specs.pdf", target="_blank">PDF</a>.</p>
+</blockquote>
+<h3>No Registers</h3>
+<p>There are no CPU registers, just one chunk of memory. Values can be loaded from every memory address and written to every memory address.</p>
+<h3>Everything is an unsigned 16-bit integer</h3>
+<p>Everything is represented as an unsigned 16-bit integer. That includes numbers, addresses, colors, the instruction pointer and the input. </p>
+<h3>Wrapping Arithmetic</h3>
+<p>All numerical operations are wrapping operations.</p>
+<h3>No Magic Numbers</h3>
+<p>The main memory contains one valid address for every u16.
+The screen-buffer is the same size as the memory and there is one pixel for every u16.</p>
+<h3>No Fluff</h3>
+<p>There are as few features as possible.
+That means limited input, no file system access, no variable display size etc.
+It also means that there are no accelerators or tricks to help with performance.</p>
+<h3>Setup</h3>
+<p>Here is a sketch of all components of the virtual computer:</p>
+<p><img alt="" src="assets/sketch.svg" /></p>
+<p>The shaded section indicates what is visible to the virtual machine while the parts outside are handled by the emulation. </p>
+<h3>Instruction pointer</h3>
+<p>The instruction pointer represents an address in main memory. It starts as zero. Then, it is manipulated by the instructions.</p>
+<h3>Screen</h3>
+<p>The screen has a resolution of 256 &times; 256 = 2<sup>16</sup> pixels. The color of each pixel is represented with 16-bits using <a href="https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_color_formats#16-bit_RGB_(also_known_as_RGB565)" target="_blank">RGB565</a>.</p>
+<p>The coordinate (x,y) of the screen maps to the index 256y+x in the screen-buffer. The coordinate (0,0) is in the upper left-hand corner. Changes to the screen-buffer are not reflected on the screen until the system is synchronized.</p>
+<h3>Sound</h3>
+<p>Sounds can be played by constructing a waveform in the sound buffer. There are no built-in samples.</p>
+<h3>Input</h3>
+<div align="left"> 
+<img src="assets/input_tester.gif" alt="Input demo" width="200"/>
+  </div>
+
+<p>The only supported inputs are the mouse position and a list of eight keys. 
+These keys are supposed to represent the face buttons of an NES controller.
+The codes for the <strong>A</strong> and <strong>B</strong> keys also represent the left and right mouse buttons.</p>
+<h3>Synchronization</h3>
+<p>When the console synchronizes, the screen-buffer is drawn to the screen and the input-buffer is updated.
+The system will be put to sleep until the beginning of the next frame.
+The targeted timing is 30fps. There is a hard limit of three million instructions per frame.</p>
+<h3>CPU</h3>
+<p>All instructions are 4 values long. A value is, of course, a u16.</p>
+<p>The instructions have the form <code>opcode arg1 arg2 arg3</code>.</p>
+<p>In the following table, all instructions are listed. <code>@arg1</code> refers to the value at the memory address <code>arg1</code>.</p>
+<blockquote>
+<p>[!NOTE]
+You can have data blobs in the binary that do not correspond with the opcodes.
+This is fine <strong>until and unless</strong> you explicitly try to run this blob of data as code.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Opcode</th>
+<th>Name</th>
+<th>Advances</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><strong>Set</strong></td>
+<td>yes</td>
+<td><code>if arg3{@arg1=inst_ptr}else{@arg1=arg2}</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><strong>GoTo</strong></td>
+<td>if skipped</td>
+<td><code>if(not @arg3){inst_ptr=@arg1+arg2}</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Skip</strong></td>
+<td>if skipped</td>
+<td><code>if(not @arg3){inst_ptr=inst_ptr+4*arg1-4*arg2}</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Add</strong></td>
+<td>yes</td>
+<td><code>@arg3=(@arg1+@arg2)</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Sub</strong></td>
+<td>yes</td>
+<td><code>@arg3=(@arg1-@arg2)</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Mul</strong></td>
+<td>yes</td>
+<td><code>@arg3=(@arg1*@arg2)</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Div</strong></td>
+<td>yes</td>
+<td><code>@arg3=(@arg1/@arg2)</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Cmp</strong></td>
+<td>yes</td>
+<td><code>@arg3=(@arg1&lt;@arg2)</code> as unsigned</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Deref</strong></td>
+<td>yes</td>
+<td><code>@arg2=@(@arg1+arg3)</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Ref</strong></td>
+<td>yes</td>
+<td><code>@(@arg1+arg3)=@arg2</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Debug</strong></td>
+<td>yes</td>
+<td>Provides <code>arg1,@arg2,@arg3</code> as debug information</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>Print</strong></td>
+<td>yes</td>
+<td>Writes <code>value=@arg1</code> to <code>index=@arg2</code> of buffer <code>arg3</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>Read</strong></td>
+<td>yes</td>
+<td>Copies <code>index=@arg1</code> of buffer <code>arg3</code> to <code>@arg2</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>Band</strong></td>
+<td>yes</td>
+<td><code>@arg3=@arg1&amp;@arg2</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>Xor</strong></td>
+<td>yes</td>
+<td><code>@arg3=@arg1^@arg2</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>Sync</strong></td>
+<td>yes</td>
+<td>Puts <code>@arg1=position_code</code>,  <code>@arg2=key_code</code> and synchronizes in that order. If <code>arg3!=0</code>, a sound is played.</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructing a Program</h3>
+<p>A program is just the initial state of the main memory.
+There is no distinction between memory that contains instructions and memory that contains some other asset.
+The initial state is loaded from a binary file that is read as containing the (little-endian) u16 values in order. The maximum size is 2 &times; 2<sup>16</sup> bytes (&approx; 131.1kB).
+It can be shorter, in which case the end is padded with zeroes. The computer will begin by executing the instruction at index 0.</p>
+<h2>Example</h2>
+<p>A simple example would be to print all 2<sup>16</sup> possible colors to the screen.
+We make our lives easier, by mapping each index of the screen-buffer to the color which is encoded with the index.
+Here, we use the names of the opcodes instead of their numbers.</p>
+<pre><code>Set 501 1 0       // Write the value 1 to address 501
+Set 502 65535 0   // Write the largest possible value to 502
+Print 500 500 0   // Display color=@500 at screen-index=@500
+Add 500 501 500   // Increment the color/screen-index
+Cmp 500 502 503   // See if we are not at the max number
+Xor 503 501 503   // Negate it
+Skip 0 4 503      // Unless we are at the max number, go back 4 instructions
+Sync 0 0 0        // Sync 
+GoTo 0 0 0        // Repeat to keep the window open
+</code></pre>
+<p>We could rely on the fact that the value at index 500 starts at zero and we did not have to initialize it.</p>
+<p>To build a program that we can execute, we could use python:</p>
+<pre><code class="language-python">import struct
+
+code = [
+    0, 501, 1, 0, #Opcodes replaced with numbers
+    0, 502, 65535, 0,
+    11, 500, 500, 0,
+    # ...
+]
+with open(&quot;all_colors.svc16&quot;, &quot;wb&quot;) as f:
+    for value in code:
+        f.write(struct.pack(&quot;&lt;H&quot;, value))
+
+</code></pre>
+<p>Inspecting the file, we should see:</p>
+<pre><code class="language-ansi">➜ hexyl examples/all_colors.svc16 -pv --panels 1
+
+  00 00 f5 01 01 00 00 00
+  00 00 f6 01 ff ff 00 00
+  0b 00 f4 01 f4 01 00 00
+  03 00 f4 01 f5 01 f4 01
+  07 00 f4 01 f6 01 f7 01
+  0e 00 f7 01 f5 01 f7 01
+  02 00 00 00 04 00 f7 01
+  0f 00 00 00 00 00 00 00
+  01 00 00 00 00 00 00 00
+</code></pre>
+<p>When we run this, we get the following output:</p>
+<p><img alt="All colors" src="assets/colors_scaled.png" /></p>
+<h2>Contributing</h2>
+<p>First of all, if you managed to build a cool game or program for the system, please share it!</p>
+<p>If you find a discrepancy between the specifications and the behavior of the emulator or some other problem or bug,
+feel free to open an issue. Please report things that are not explained well.</p>
+</body>
+</html>

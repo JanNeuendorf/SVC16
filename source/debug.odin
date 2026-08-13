@@ -1,4 +1,4 @@
-package main
+package game
 import "core:fmt"
 import rl "vendor:raylib"
 
@@ -41,4 +41,3 @@ DrawDebugMode :: proc(db: ^DebugBuffer, layout: GlobalLayout, frame: int) {
 	}
 
 }
-

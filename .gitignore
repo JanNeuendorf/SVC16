@@ -1,5 +1,0 @@
-# So we do not commit the compiled specifications for every small change 
-*.pdf
-# A folder for the releases
-releases
-.DS_Store

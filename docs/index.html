@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>SVC16</title>
+	<link rel="icon" type="image/png" href="assets/logo_alpha.png">
+	<style>
+		:root {
+			--bg-color: #323232;
+			--container-border: #444444;
+
+			/* Text Colors */
+			--title-color: #f3f4f6;
+			--subtitle-color: #9ca3af;
+			--footer-text-color: #6b7280;
+
+			/* Accent & Link */
+			--link-color: #a82b9b;
+			--link-hover-color: #ffffff;
+
+			/* Layout */
+			--content-max-width: 500px;
+			--frame-width: 500px;
+			--frame-height: 560px;
+
+			--font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+		}
+
+		body {
+			margin: 0;
+			padding: 20px;
+			background-color: var(--bg-color);
+			color: var(--title-color);
+			font-family: var(--font-family);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			min-height: 100vh;
+			box-sizing: border-box;
+		}
+
+		header {
+			width: 100%;
+			max-width: var(--content-max-width);
+			margin-bottom: 16px;
+			padding-bottom: 12px;
+			border-bottom: 1px solid var(--container-border);
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		h1 {
+			margin: 0;
+			font-size: 1.2rem;
+			color: var(--title-color);
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+
+		.sub-title {
+			font-size: 0.75rem;
+			color: var(--subtitle-color);
+			display: block;
+			margin-top: 2px;
+		}
+
+		nav {
+			display: flex;
+			gap: 16px;
+			align-items: center;
+		}
+
+		nav a {
+			color: var(--link-color);
+			text-decoration: none;
+			font-size: 0.8rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			display: flex;
+			align-items: center;
+			transition: color 0.15s ease;
+		}
+
+		nav a:hover {
+			color: var(--link-hover-color);
+		}
+
+		.nav-icon {
+			width: 15px;
+			height: 15px;
+			margin-right: 6px;
+			display: inline-block;
+			vertical-align: middle;
+		}
+
+		.game-iframe-container {
+			width: 100%;
+			max-width: var(--frame-width);
+			display: flex;
+			justify-content: center;
+		}
+
+		iframe.game-frame {
+			width: 100%;
+			max-width: var(--frame-width);
+			height: var(--frame-height);
+			border: none;
+			background: transparent;
+			overflow: hidden;
+		}
+
+		.readme-container {
+			width: 100%;
+			max-width: var(--content-max-width);
+			margin-top: 24px;
+			border-top: 1px solid var(--container-border);
+			padding-top: 16px;
+		}
+
+		iframe.readme-frame {
+			width: 100%;
+			min-height: 400px;
+			border: none;
+			background: transparent;
+			overflow: hidden;
+		}
+
+		footer {
+			width: 100%;
+			max-width: var(--content-max-width);
+			margin-top: 24px;
+			padding-top: 12px;
+			border-top: 1px solid var(--container-border);
+			font-size: 0.75rem;
+			color: var(--footer-text-color);
+			display: flex;
+			justify-content: space-between;
+		}
+
+		@media (max-width: 540px) {
+			body {
+				padding: 10px;
+				overflow-x: hidden;
+			}
+			iframe.game-frame {
+				height: calc((100vw - 20px) + 60px);
+			}
+		}
+	</style>
+	<script>
+		function resizeIframe(obj) {
+			try {
+				var doc = obj.contentWindow.document;
+				var updateHeight = function() {
+					var h = Math.max(doc.body ? doc.body.scrollHeight : 0, doc.documentElement ? doc.documentElement.scrollHeight : 0);
+					if (h > 0) obj.style.height = (h + 30) + 'px';
+				};
+				updateHeight();
+				setTimeout(updateHeight, 300);
+				setTimeout(updateHeight, 1000);
+				var imgs = doc.getElementsByTagName('img');
+				for (var i = 0; i < imgs.length; i++) {
+					imgs[i].addEventListener('load', updateHeight);
+				}
+			} catch(e) {}
+		}
+	</script>
+</head>
+<body>
+	<header>
+		<div>
+			<h1>SVC16</h1>
+			<span class="sub-title">A Simple Virtual Computer</span>
+		</div>
+		<nav>
+			<a href="assets/specs.pdf" target="_blank" aria-label="SVC16 Specifications" title="SVC16 Specifications">
+				<img src="assets/doc.svg" class="nav-icon" alt="Specs Document">
+				<span>SPECS</span>
+			</a>
+			<a href="https://github.com/JanNeuendorf/SVC16" target="_blank" aria-label="GitHub Repository" title="GitHub Repository">
+				<img src="assets/github.svg" class="nav-icon" alt="GitHub">
+				<span>GITHUB</span>
+			</a>
+		</nav>
+	</header>
+
+	<div class="game-iframe-container">
+		<iframe class="game-frame" src="game.html" allow="fullscreen" scrolling="no"></iframe>
+	</div>
+
+	<div class="readme-container">
+		<iframe class="readme-frame" src="readme.html" id="readmeFrame" onload="resizeIframe(this)" scrolling="no"></iframe>
+	</div>
+
+	<footer>
+		<span>&copy; Jan Neuendorf. Released under the MIT License.</span>
+		<!-- <span>Powered by Odin & Raylib</span> -->
+	</footer>
+</body>
+</html>

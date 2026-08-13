@@ -1,0 +1,359 @@
+<!doctype html>
+<!-- Adapted from Karl Zylinski's odin-raylib-web template (https://github.com/karl-zylinski/odin-raylib-web) -->
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+	<title>this is svc16</title>
+	<meta name="title" content="this is svc16">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" type="image/png" href="assets/logo_alpha.png">
+
+	<style>
+		:root {
+			--bg-color: #323232;
+			--text-color: #ffffff;
+
+			--btn-bg: #c9c9c9;
+			--btn-bg-hover: #7a0a6f;
+			--btn-text: #4a4a4a;
+			--btn-text-hover: #ffffff;
+			--btn-border: #838383;
+			--btn-border-hover: #7a0a6f;
+
+			--container-border: #444444;
+			--container-bg: #1e1e1e;
+		}
+
+		body { 
+			margin: 0; 
+			padding: 0;
+			background-color: var(--bg-color);
+			color: var(--text-color);
+			font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: flex-start;
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+
+		body.debug-mode {
+			overflow: auto;
+			padding-bottom: 20px;
+		}
+
+		.canvas-container {
+			border: none;
+			border-radius: 0px;
+			padding: 0;
+			background-color: transparent;
+			display: block;
+			width: 100%;
+			max-width: 500px;
+		}
+
+		canvas.game_canvas { 
+			border: 0px none; 
+			background-color: black;
+			display: block;
+			width: 100%;
+			max-width: 500px;
+			height: auto;
+			aspect-ratio: 1 / 1;
+		}
+
+		.controls-bar {
+			margin-top: 16px;
+			width: 100%;
+			max-width: 500px;
+			display: flex;
+			gap: 12px;
+			justify-content: flex-start;
+			align-items: center;
+		}
+
+		.upload-btn, .fullscreen-btn {
+			background-color: var(--btn-bg);
+			color: var(--btn-text);
+			border: 1px solid var(--btn-border);
+			padding: 3px 8px;
+			border-radius: 0px;
+			cursor: pointer;
+			font-weight: 700;
+			font-size: 0.68rem;
+			letter-spacing: 0.2px;
+			text-transform: uppercase;
+			font-family: "Courier New", Courier, "Liberation Mono", Consolas, monospace;
+			-webkit-font-smoothing: none;
+			font-smooth: never;
+			transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+		}
+
+		.upload-btn:hover, .fullscreen-btn:hover {
+			background-color: var(--btn-bg-hover);
+			color: var(--btn-text-hover);
+			border-color: var(--btn-border-hover);
+		}
+
+		.log-container {
+			display: none;
+			margin-top: 20px;
+			width: 100%;
+			max-width: 508px;
+			background-color: var(--container-bg);
+			border: 2px solid var(--container-border);
+			border-radius: 4px;
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+
+		body.debug-mode .log-container {
+			display: block;
+		}
+
+		.log-header {
+			background-color: #2d2d2d;
+			padding: 8px 14px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid var(--container-border);
+		}
+
+		.log-title {
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: #38bdf8;
+			font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		}
+
+		.log-actions {
+			display: flex;
+			gap: 8px;
+		}
+
+		.log-btn {
+			background-color: var(--btn-bg);
+			color: var(--btn-text);
+			border: 1px solid var(--btn-border);
+			padding: 4px 10px;
+			border-radius: 0px;
+			cursor: pointer;
+			font-size: 0.8rem;
+			font-weight: 700;
+			font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+			transition: background-color 0.15s ease;
+		}
+
+		.log-btn:hover {
+			background-color: var(--btn-bg-hover);
+		}
+
+		.log-textarea {
+			width: 100%;
+			height: 180px;
+			background-color: #0f172a;
+			color: #38bdf8;
+			font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+			font-size: 0.85rem;
+			line-height: 1.4;
+			padding: 10px;
+			border: none;
+			resize: vertical;
+			box-sizing: border-box;
+			outline: none;
+			white-space: pre-wrap;
+			word-break: break-all;
+		}
+	</style>
+</head>
+<body>
+	<div class="canvas-container">
+		<canvas class="game_canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1" onmousedown="event.target.focus()" onkeydown="event.preventDefault()"></canvas>
+	</div>
+
+	<div class="controls-bar">
+		<input type="file" id="binary_file_input" accept=".svc16" style="display:none" onchange="handleBinaryFileSelect(event)">
+		<button class="upload-btn" onclick="document.getElementById('binary_file_input').click()">Upload My Own ROM</button>
+		<button class="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
+	</div>
+
+	<div class="log-container">
+		<div class="log-header">
+			<span class="log-title">Console Output & Error Log</span>
+			<div class="log-actions">
+				<button class="log-btn" onclick="clearLog()">Clear Log</button>
+			</div>
+		</div>
+		<textarea id="output" class="log-textarea" readonly placeholder="WASM logs and errors will appear here..."></textarea>
+	</div>
+
+	<script type="text/javascript" src="odin.js"></script>
+	<script>
+		var odinMemoryInterface = new odin.WasmMemoryInterface();
+		odinMemoryInterface.setIntSize(4);
+		var odinImports = odin.setupDefaultImports(odinMemoryInterface);
+
+		function initDebugMode() {
+			var urlParams = new URLSearchParams(window.location.search);
+			var isDebug = urlParams.has('debug') || window.location.hash === '#debug';
+			if (isDebug) {
+				document.body.classList.add('debug-mode');
+			}
+		}
+		initDebugMode();
+
+		function toggleFullscreen() {
+			var canvas = document.getElementById("canvas");
+			if (!canvas) return;
+
+			if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+				if (canvas.requestFullscreen) {
+					canvas.requestFullscreen();
+				} else if (canvas.webkitRequestFullscreen) {
+					canvas.webkitRequestFullscreen();
+				} else if (canvas.mozRequestFullScreen) {
+					canvas.mozRequestFullScreen();
+				} else if (canvas.msRequestFullscreen) {
+					canvas.msRequestFullscreen();
+				}
+			} else {
+				if (document.exitFullscreen) {
+					document.exitFullscreen();
+				} else if (document.webkitExitFullscreen) {
+					document.webkitExitFullscreen();
+				} else if (document.mozCancelFullScreen) {
+					document.mozCancelFullScreen();
+				} else if (document.msExitFullscreen) {
+					document.msExitFullscreen();
+				}
+			}
+		}
+
+		function clearLog() {
+			var element = document.getElementById("output");
+			if (element) element.value = '';
+		}
+
+		window.addEventListener('error', function(event) {
+			var element = document.getElementById("output");
+			if (element) {
+				element.value += "[ERROR] Uncaught JS Exception: " + (event.message || event) + "\n";
+				element.scrollTop = element.scrollHeight;
+			}
+		});
+
+		window.addEventListener('unhandledrejection', function(event) {
+			var element = document.getElementById("output");
+			if (element) {
+				element.value += "[ERROR] Unhandled Rejection: " + event.reason + "\n";
+				element.scrollTop = element.scrollHeight;
+			}
+		});
+
+		function trigger_file_upload_js() {
+			document.getElementById('binary_file_input').click();
+		}
+
+		function handleBinaryFileSelect(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				const arrayBuffer = e.target.result;
+				const uint8Array = new Uint8Array(arrayBuffer);
+				const bytesLen = uint8Array.length;
+
+				// Allocate WASM heap memory for file contents
+				const ptr = Module._malloc(bytesLen);
+				Module.HEAPU8.set(uint8Array, ptr);
+
+				// Allocate WASM heap memory for filename string
+				const encoder = new TextEncoder();
+				const nameBytes = encoder.encode(file.name + '\0');
+				const namePtr = Module._malloc(nameBytes.length);
+				Module.HEAPU8.set(nameBytes, namePtr);
+
+				// Invoke exported Odin procedure to copy binary data into Odin buffer
+				var fn = (Module.asm && Module.asm.load_user_file_data) || (wasmExports && wasmExports.load_user_file_data);
+				if (fn) {
+					fn(ptr, bytesLen, namePtr);
+				}
+
+				// Free temporary WASM allocations
+				Module._free(ptr);
+				Module._free(namePtr);
+			};
+			reader.readAsArrayBuffer(file);
+		}
+
+		var Module = {
+			instantiateWasm: (imports, successCallback) => {
+				const newImports = {
+					...odinImports,
+					...imports
+				}
+
+				return WebAssembly.instantiateStreaming(fetch("game.wasm"), newImports).then(function(output) {
+					var e = output.instance.exports;
+					odinMemoryInterface.setExports(e);
+					odinMemoryInterface.setMemory(e.memory);
+					return successCallback(output.instance);
+				});
+			},
+			onRuntimeInitialized: () => {
+				var e = wasmExports;
+
+				// Calls any procedure marked with @init
+				e._start();
+
+				// See source/main_web/main_web.odin
+				e.main_start();
+
+				function do_main_update() {
+					if (!e.main_update()) {
+						e.main_end();
+						e._end();
+						return;
+					}
+					window.requestAnimationFrame(do_main_update);
+				}
+
+				window.requestAnimationFrame(do_main_update);
+			},
+			print: (function() {
+				return function(text) {
+					if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+					console.log(text);
+					var element = document.getElementById("output");
+					if (element) {
+					  element.value += text + "\n";
+					  element.scrollTop = element.scrollHeight;
+					}
+				};
+			})(),
+			printErr: (function() {
+				return function(text) {
+					if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+					console.error(text);
+					var element = document.getElementById("output");
+					if (element) {
+					  element.value += "[ERROR] " + text + "\n";
+					  element.scrollTop = element.scrollHeight;
+					}
+				};
+			})(),
+			canvas: (function() {
+				return document.getElementById("canvas");
+			})()
+		};
+	</script>
+
+	<!-- Emscripten injects its javascript here -->
+	{{{ SCRIPT }}}
+</body>
+</html>

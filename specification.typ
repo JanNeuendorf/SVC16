@@ -61,7 +61,7 @@ This includes manipulations of the instruction pointer. Division by zero crashes
 
 = The Simulated System
 #figure(
-  image("sketch.svg", width: 90%),
+  image("assets/sketch.svg", width: 90%),
   caption: [A sketch of all components of the virtual computer. The shaded area indicates what is visible to the simulation.],
 ) <sketch>
 
@@ -355,10 +355,8 @@ There is intentionally no way of restarting or even quitting a program from with
 
   When we run this, we should see the output shown in @colors.
   #figure(
-    image("colors_scaled.png", width: 40%),
+    image("assets/colors_scaled.png", width: 40%),
     caption: [Output of the color example.],
   ) <colors>
   Can you figure out why the program crashes if a button is pressed? How could this be fixed?
 ]
-
-
