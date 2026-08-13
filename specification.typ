@@ -115,7 +115,7 @@ The codes for the *A* and *B* keys also represent the left and right mouse butto
 On synchronization, the new input is written to a specified memory address.
 This means that the input is inaccessible before the system is first synchronized. (See @instructions, @synchronization)
 
-The *position code* is the index of the pixel, the mouse is currently on.
+The *position code* is the index of the pixel the mouse is currently on.
 It follows the same convention as the screen index explained in @screen.
 
 #let custom_button(lbl) = block(
@@ -294,7 +294,7 @@ There is intentionally no way of restarting or even quitting a program from with
 
 
   Our goal could be to print all $2^16$ possible colors to the screen.
-  We make our lives easier, by mapping each index of the screen buffer to the color which is encoded with the index.
+  We make our lives easier by mapping each index of the screen buffer to the color which is encoded with the index.
   Here, we use the names of the opcodes instead of their numbers.
 
   ```typ
