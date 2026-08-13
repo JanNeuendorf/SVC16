@@ -1,14 +1,6 @@
-package main
-import "core:bytes"
-import "core:compress"
-import "core:compress/gzip"
-import "core:encoding/endian"
-import "core:fmt"
-import "core:math"
-import "core:mem"
-import os "core:os/old"
-import "core:strings"
+package game
 
+import "core:mem"
 MAXINST :: 3000000
 MAXMEM :: 65536
 Buffer :: [MAXMEM]u16
@@ -74,40 +66,28 @@ DestroyEngine :: proc(e: ^Engine) {
 	free(e.overdraw_buffer)
 }
 
-AddRomFromFileAndReset :: proc(engine: ^Engine, filename: string) {
-	buf: bytes.Buffer
-	defer bytes.buffer_destroy(&buf)
+AddRomFromBufferAndReset :: proc(engine: ^Engine, data: []u8) {
+	mem.zero(engine.main_buffer, size_of(Buffer))
 
+	bytes_to_read := min(len(data), MAXMEM * 2)
+	words_to_read := bytes_to_read / 2
 
-	if strings.ends_with(filename, ".gz") {
-		err := gzip.load_from_file(filename, &buf)
-		if err != nil {panic("Could not read compressed ROM")}
-	} else {
-		data, ok := os.read_entire_file(filename)
-		if !ok {panic("Could not read ROM")}
-		bytes.buffer_write(&buf, data)
-		delete(data)
-	}
-	if bytes.buffer_length(&buf) % 2 != 0 {
-		panic("ROM must have an even number of bytes")
+	for i in 0 ..< words_to_read {
+		a := data[2 * i]
+		b := data[2 * i + 1]
+		engine.main_buffer[i] = u16(a) | (u16(b) << 8)
 	}
 
-	l := bytes.buffer_length(&buf) / 2
-	if l > MAXMEM {
-		panic("The ROM is larger than the available memory")
+	if bytes_to_read < MAXMEM * 2 && len(data) % 2 != 0 {
+		a := data[2 * words_to_read]
+		engine.main_buffer[words_to_read] = u16(a)
 	}
-	for i in 0 ..< l {
-		a, _, b, _ := bytes.buffer_read_byte(&buf), bytes.buffer_read_byte(&buf)
-		val := u16(a) | (u16(b) << 8)
-		engine.main_buffer[i] = val
-	}
-	mem.zero(engine.screen_buffer, MAXMEM)
-	mem.zero(engine.sound_buffer, MAXMEM)
-	mem.zero(engine.overdraw_buffer, MAXMEM)
+
+	mem.zero(engine.screen_buffer, size_of(Buffer))
+	mem.zero(engine.sound_buffer, size_of(Buffer))
+	mem.zero(engine.overdraw_buffer, size_of(Buffer))
 	engine.input = {0, 0}
 	engine.i_pointer = 0
-
-
 }
 
 
@@ -298,4 +278,3 @@ StepEngine :: proc(engine: ^Engine) -> EngineEvent {
 
 
 }
-

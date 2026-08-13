@@ -1,6 +1,6 @@
-package main
-
+package game
 import "core:fmt"
+
 import rl "vendor:raylib"
 
 GlobalLayout :: struct {
@@ -196,4 +196,3 @@ DrawError :: proc(layout: GlobalLayout, event: EngineEvent, frame: int) {
 	msg = fmt.ctprintf("Error\nOn frame: %d\n%s", frame, er)
 	rl.DrawText(msg, 200, 250, 40, rl.WHITE)
 }
-
