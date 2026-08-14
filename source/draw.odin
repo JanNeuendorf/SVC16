@@ -25,7 +25,7 @@ FreeDrawPipeline :: proc(dp: ^DrawPipeline) {
 UpdateDrawPipeline :: proc(
 	dp: ^DrawPipeline,
 	screenbuffer: ^Buffer,
-	converter: proc(u: u16) -> (u8, u8, u8) = rgb556_to_argb,
+	converter: proc(u: u16) -> (u8, u8, u8) = rgb565_to_rgb,
 ) {
 	pixels := slice.bytes_from_ptr(dp.image.data, 256 * 256 * 4)
 	for i in 0 ..< 256 * 256 {
@@ -38,7 +38,7 @@ UpdateDrawPipeline :: proc(
 
 }
 
-rgb556_to_argb :: proc(rgb565: u16) -> (u8, u8, u8) {
+rgb565_to_rgb :: proc(rgb565: u16) -> (u8, u8, u8) {
 	r := u8(((rgb565 >> 11) & 0x1F))
 	g := u8(((rgb565 >> 5) & 0x3F))
 	b := u8((rgb565 & 0x1F))
@@ -52,11 +52,8 @@ rgb556_to_argb :: proc(rgb565: u16) -> (u8, u8, u8) {
 
 heatmap :: proc(count: u16) -> (u8, u8, u8) {
 	cols := [7]rl.Color{rl.BLACK, rl.GREEN, rl.DARKGREEN, rl.YELLOW, rl.ORANGE, rl.RED, rl.VIOLET}
-	if count > 6 {
-		return heatmap(6)
-	} else {
-		return cols[count].r, cols[count].g, cols[count].b
-	}
+	c := min(count, 6)
+	return cols[c].r, cols[c].g, cols[c].b
 
 
 }
@@ -70,5 +67,5 @@ hash_u16 :: proc(u: u16) -> (u8, u8, u8) {
 	xor: u16 = 0xACE1
 
 	new := (u * mul) ~ xor
-	return rgb556_to_argb(new)
+	return rgb565_to_rgb(new)
 }

@@ -20,9 +20,9 @@
 			--link-hover-color: #ffffff;
 
 			/* Layout */
-			--content-max-width: 500px;
-			--frame-width: 500px;
-			--frame-height: 560px;
+			--content-max-width: 550px;
+			--frame-width: 550px;
+			--frame-height: 616px;
 
 			--font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 		}
@@ -149,6 +149,64 @@
 				height: calc((100vw - 20px) + 60px);
 			}
 		}
+
+		.help-container {
+			width: 100%;
+			max-width: var(--content-max-width);
+			margin-top: 12px;
+			box-sizing: border-box;
+		}
+
+		.help-summary {
+			font-family: var(--font-family);
+			font-size: 0.75rem;
+			font-weight: 700;
+			color: var(--subtitle-color);
+			cursor: pointer;
+			user-select: none;
+			letter-spacing: 0.5px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			transition: color 0.15s ease;
+		}
+
+		.help-summary:hover {
+			color: var(--link-hover-color);
+		}
+
+		.help-summary::-webkit-details-marker {
+			display: none;
+		}
+
+		.help-arrow {
+			display: inline-block;
+			transition: transform 0.15s ease;
+			font-size: 0.65rem;
+		}
+
+		details[open] .help-arrow {
+			transform: rotate(90deg);
+		}
+
+		.help-content {
+			margin-top: 8px;
+			background-color: rgba(0, 0, 0, 0.15);
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			padding: 8px 12px;
+			border-radius: 4px;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.help-text {
+			margin: 0;
+			font-family: var(--font-family);
+			font-size: 0.72rem;
+			color: var(--title-color);
+			white-space: pre;
+			line-height: 1.45;
+		}
 	</style>
 	<script>
 		function resizeIframe(obj) {
@@ -188,8 +246,36 @@
 	</header>
 
 	<div class="game-iframe-container">
-		<iframe class="game-frame" src="game.html" allow="fullscreen" scrolling="no"></iframe>
+		<iframe class="game-frame" src="game.html" allow="fullscreen; gamepad" scrolling="no"></iframe>
 	</div>
+
+	<details class="help-container">
+		<summary class="help-summary">
+			<span class="help-arrow">&#9656;</span> HELP &amp; CONTROLS
+		</summary>
+		<div class="help-content">
+			<pre class="help-text">
+Controls:
+  - Arrows / WASD   : D-Pad (Up, Down, Left, Right)
+  - Space / Mouse L : Button A
+  - B / Mouse R     : Button B
+  - N / M           : Select / Start
+  - P / R           : Pause / Reload ROM
+
+View Modes:
+  - Normal          : Standard RGB565 screen output (256x256)
+  - Overdraw        : Heatmap of pixel write ops per frame
+  - Sound as Screen : Sound buffer displayed as screen output
+  - Memory View     : Color map of all 65,536 memory addresses
+  - Debug           : On-screen log of Debug instruction values
+
+ROM Files:
+  - Format          : Requires binary .svc16 ROM files
+  - Local           : Files remain 100% local (no server upload)
+  - Examples        : Check the GitHub Repo for examples
+			</pre>
+		</div>
+	</details>
 
 	<div class="readme-container">
 		<iframe class="readme-frame" src="readme.html" id="readmeFrame" onload="resizeIframe(this)" scrolling="no"></iframe>

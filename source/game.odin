@@ -12,7 +12,7 @@ SCREEN_HEIGHT :: 1000
 
 UploadedData :: struct {
 	buffer:      []u8,
-	max_size_mb: int,
+	max_size_kb: int,
 }
 
 uploaded_data: UploadedData
@@ -57,6 +57,7 @@ load_user_file_data :: proc "c" (data: [^]u8, size: c.int, name: cstring) {
 
 	if size <= 0 || data == nil do return
 
+	mem.zero_slice(uploaded_data.buffer)
 	copy_len := min(int(size), len(uploaded_data.buffer))
 	mem.copy(raw_data(uploaded_data.buffer), data, copy_len)
 	AddRomFromBufferAndReset(&e, uploaded_data.buffer)
@@ -72,15 +73,15 @@ load_user_file_data :: proc "c" (data: [^]u8, size: c.int, name: cstring) {
 init :: proc() {
 	rl.InitAudioDevice()
 	rl.SetConfigFlags({.VSYNC_HINT})
-	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Odin Raylib - Move the Circle")
+	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "SVC16")
 	e = CreateEngine()
 
 	logo_img := rl.LoadImageFromMemory(".png", raw_data(LOGO_PNG), i32(len(LOGO_PNG)))
 	logo_texture = rl.LoadTextureFromImage(logo_img)
 	rl.UnloadImage(logo_img)
 
-	uploaded_data.max_size_mb = 1
-	uploaded_data.buffer = make([]u8, uploaded_data.max_size_mb * 1024 * 1024)
+	uploaded_data.max_size_kb = 256 // Safety margin if different formats might be supported
+	uploaded_data.buffer = make([]u8, uploaded_data.max_size_kb * 1024)
 
 	sound_manager = InitSoundManager()
 	dp = InitDrawPipeline()
@@ -107,11 +108,10 @@ update :: proc() {
 	if !has_uploaded_anything {
 		if rl.IsMouseButtonPressed(.LEFT) {
 			AddRomFromBufferAndReset(&e, EXAMPLE)
+			copy(uploaded_data.buffer, EXAMPLE)
 			has_uploaded_anything = true
 		}
-		rl.DrawTextureEx(logo_texture, {200, 200}, 0.0, 0.7, rl.WHITE)
-		rl.DrawText("Nothing uploaded...", 80, 880, 30, rl.LIGHTGRAY)
-		rl.DrawText("Click to play example", 80, 920, 30, rl.LIGHTGRAY)
+		DrawStartupAnimation()
 		return
 	}
 	// Now the real loop
@@ -121,8 +121,9 @@ update :: proc() {
 		reload = false
 		paused = false
 		error = false
-		FreeSoundManager(sound_manager)
-		sound_manager = InitSoundManager()
+		// FreeSoundManager(sound_manager)
+		// sound_manager = InitSoundManager()
+		ResetSoundManager(&sound_manager)
 		frame = 0
 	}
 
@@ -198,4 +199,33 @@ shutdown :: proc() {
 	delete(uploaded_data.buffer)
 	rl.CloseAudioDevice()
 	rl.CloseWindow()
+}
+
+DrawStartupAnimation :: proc() {
+	anim_speed: f32 = 0.5
+	time := f32(rl.GetTime()) * anim_speed
+	t := min(1.0, time)
+	scale := 0.7 * (1.0 - (1.0 - t) * (1.0 - t))
+	pos := rl.Vector2 {
+		200 + f32(logo_texture.width) * (0.7 - scale) * 0.5,
+		200 + f32(logo_texture.height) * (0.7 - scale) * 0.5,
+	}
+	tint := rl.WHITE
+	text_color := rl.LIGHTGRAY
+	if t < 1.0 {
+		tint = rl.ColorFromHSV(t * 40.0, 0.4 * (1.0 - t), 1.0)
+	} else {
+		s1 := math.sin(f32(rl.GetTime()) * 2.7)
+		s2 := math.sin(f32(rl.GetTime()) * 7.3)
+		flicker := f32(0.92 + (s1 * 0.05 + s2 * 0.03))
+		tint = rl.ColorAlpha(rl.WHITE, flicker)
+		text_color = rl.ColorAlpha(rl.LIGHTGRAY, flicker)
+	}
+	rl.DrawTextureEx(logo_texture, pos, 0.0, scale, tint)
+	if time > 0.7 {
+		rl.DrawText("Nothing uploaded...", 80, 880, 30, text_color)
+	}
+	if time > 1.4 {
+		rl.DrawText("Click to play example", 80, 920, 30, text_color)
+	}
 }

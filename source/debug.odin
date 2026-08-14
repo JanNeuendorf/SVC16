@@ -30,7 +30,7 @@ DrawDebugMode :: proc(db: ^DebugBuffer, layout: GlobalLayout, frame: int) {
 	for i in i32(0) ..< i32(db.len) {
 		msg := db.content[i]
 		y: i32 = i32(layout.screen.y) + (i + 1) * (spacing + fontsize) + spacing
-		line := fmt.ctprintf("code: %d  values: %d , %d", msg[0], msg[1], msg[2])
+		line := fmt.ctprintf("code: %d  values: %d, %d", msg[0], msg[1], msg[2])
 		rl.DrawText(line, x, y, fontsize, color)
 
 	}

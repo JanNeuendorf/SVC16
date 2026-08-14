@@ -47,7 +47,7 @@ GetGlobalLayout :: proc() -> GlobalLayout {
 		play.height,
 	}
 	cursor := rl.Rectangle {
-		reload.x + +play.width + 2 * button_buffer,
+		reload.x + play.width + 2 * button_buffer,
 		play.y,
 		button_width,
 		play.height,
@@ -59,7 +59,7 @@ GetGlobalLayout :: proc() -> GlobalLayout {
 		play.height,
 	}
 	input := rl.Rectangle {
-		mute.x + play.width + 4 * button_buffer + width - 950,
+		mute.x + play.width + 4 * button_buffer + width - 980,
 		play.y,
 		button_width * 3,
 		play.height,
@@ -126,11 +126,18 @@ DrawBarLine :: proc(layout: GlobalLayout, event: EngineEvent, input: [2]u16, i_c
 	if event == .SyncTimeout {
 		i_text = cstring("OVER")
 	} else {
-		i_text = fmt.ctprintf("%06d", i_count)
+		c := max(0, i_count)
+		if c >= 1_000_000 {
+			i_text = fmt.ctprintf("%d_%03d_%03d", c / 1_000_000, (c / 1_000) % 1_000, c % 1_000)
+		} else if c >= 1_000 {
+			i_text = fmt.ctprintf("%d_%03d", c / 1_000, c % 1_000)
+		} else {
+			i_text = fmt.ctprintf("%d", c)
+		}
 	}
 	bartext := fmt.ctprintf(
 		"mx: %03d my: %03d mc: %05d kc: %03d     instructions: %s",
-		input[0] - (input[0] / 256) * 256,
+		input[0] % 256,
 		input[0] / 256,
 		input[0],
 		input[1],

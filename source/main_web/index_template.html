@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-	<title>this is svc16</title>
+	<title>SVC16</title>
 	<meta name="title" content="this is svc16">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" type="image/png" href="assets/logo_alpha.png">
@@ -52,23 +52,45 @@
 			background-color: transparent;
 			display: block;
 			width: 100%;
-			max-width: 500px;
+			max-width: 1000px;
 		}
 
 		canvas.game_canvas { 
 			border: 0px none; 
+			outline: none;
 			background-color: black;
 			display: block;
 			width: 100%;
-			max-width: 500px;
+			max-width: 1000px;
 			height: auto;
 			aspect-ratio: 1 / 1;
+			image-rendering: auto;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		canvas.game_canvas:focus,
+		canvas.game_canvas:focus-visible {
+			outline: none !important;
+			border: 0px none !important;
+			box-shadow: none !important;
+		}
+
+		canvas.game_canvas:fullscreen,
+		canvas.game_canvas:-webkit-full-screen {
+			width: min(100vw, 100vh) !important;
+			height: min(100vw, 100vh) !important;
+			aspect-ratio: 1 / 1 !important;
+			margin: auto !important;
+			display: block !important;
+			image-rendering: pixelated !important;
+			image-rendering: crisp-edges !important;
+			image-rendering: -webkit-optimize-contrast !important;
 		}
 
 		.controls-bar {
 			margin-top: 16px;
 			width: 100%;
-			max-width: 500px;
+			max-width: 1000px;
 			display: flex;
 			gap: 12px;
 			justify-content: flex-start;
@@ -172,12 +194,12 @@
 </head>
 <body>
 	<div class="canvas-container">
-		<canvas class="game_canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1" onmousedown="event.target.focus()" onkeydown="event.preventDefault()"></canvas>
+		<canvas class="game_canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex="0" onmousedown="event.target.focus()" onkeydown="event.preventDefault()"></canvas>
 	</div>
 
 	<div class="controls-bar">
 		<input type="file" id="binary_file_input" accept=".svc16" style="display:none" onchange="handleBinaryFileSelect(event)">
-		<button class="upload-btn" onclick="document.getElementById('binary_file_input').click()">Upload My Own ROM</button>
+		<button class="upload-btn" onclick="document.getElementById('binary_file_input').click()">Play Your Own ROM</button>
 		<button class="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
 	</div>
 
@@ -205,6 +227,31 @@
 			}
 		}
 		initDebugMode();
+
+		(function() {
+			var orig = HTMLCanvasElement.prototype.getBoundingClientRect;
+			HTMLCanvasElement.prototype.getBoundingClientRect = function() {
+				var rect = orig.call(this);
+				if (document.fullscreenElement === this || document.webkitFullscreenElement === this || document.mozFullScreenElement === this) {
+					var w = window.innerWidth;
+					var h = window.innerHeight;
+					var visSize = Math.min(w, h);
+					var left = (w - visSize) / 2.0;
+					var top = (h - visSize) / 2.0;
+					return {
+						left: left,
+						top: top,
+						right: left + visSize,
+						bottom: top + visSize,
+						width: visSize,
+						height: visSize,
+						x: left,
+						y: top
+					};
+				}
+				return rect;
+			};
+		})();
 
 		function toggleFullscreen() {
 			var canvas = document.getElementById("canvas");
