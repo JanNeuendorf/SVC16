@@ -112,6 +112,22 @@
 			overflow: hidden;
 		}
 
+		.info-section {
+			width: 100%;
+			max-width: var(--content-max-width);
+			margin-top: 24px;
+			border-top: 1px solid var(--container-border);
+			padding-top: 16px;
+			box-sizing: border-box;
+			font-size: 0.85rem;
+			color: var(--subtitle-color);
+			line-height: 1.6;
+		}
+
+		.info-section p {
+			margin: 0;
+		}
+
 		.readme-container {
 			width: 100%;
 			max-width: var(--content-max-width);
@@ -277,13 +293,20 @@ ROM Files:
 		</div>
 	</details>
 
+	<div class="info-section">
+		<p>
+		Have you always wanted to build a compiler or optimize code for a retro console?
+		But there was always some technical roadblock that had nothing to do with the challenge you actually wanted to tackle?<br>
+		Maybe this project is for you.
+		</p>
+	</div>
+
 	<div class="readme-container">
 		<iframe class="readme-frame" src="readme.html" id="readmeFrame" onload="resizeIframe(this)" scrolling="no"></iframe>
 	</div>
 
 	<footer>
 		<span>&copy; Jan Neuendorf. Released under the MIT License.</span>
-		<!-- <span>Powered by Odin & Raylib</span> -->
 	</footer>
 </body>
 </html>
