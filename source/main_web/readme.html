@@ -124,6 +124,33 @@
 			filter: invert(0.85) hue-rotate(180deg) contrast(0.95);
 		}
 
+		.opcode-table-wrapper {
+			display: block;
+			width: 100%;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			margin: 1em 0;
+		}
+
+		.opcode-table {
+			display: table !important;
+			table-layout: fixed !important;
+			width: 100% !important;
+			min-width: 480px;
+			border-collapse: collapse;
+			margin: 0 !important;
+		}
+
+		.opcode-table th,
+		.opcode-table td {
+			box-sizing: border-box;
+		}
+
+		.opcode-table th:nth-child(1) { width: 12% !important; }
+		.opcode-table th:nth-child(2) { width: 16% !important; }
+		.opcode-table th:nth-child(3) { width: 20% !important; }
+		.opcode-table th:nth-child(4) { width: 52% !important; }
+
 		.opcode-table tr.hidden-row {
 			display: none;
 		}
@@ -227,6 +254,7 @@ The targeted timing is 30fps. There is a hard limit of three million instruction
 <!-- You can have data blobs in the binary that do not correspond with the opcodes. -->
 <!-- This is fine <strong>until and unless</strong> you explicitly try to run this blob of data as code.</p> -->
 <!-- </blockquote> -->
+<div class="opcode-table-wrapper">
 <table class="opcode-table" id="opcodeTable">
 <thead>
 <tr>
@@ -264,7 +292,7 @@ The targeted timing is 30fps. There is a hard limit of three million instruction
 <tr class="opcode-toggle-row" id="opcodeToggleRow" onclick="toggleOpcodes()">
 	<td colspan="4">
 		<span class="opcode-tri">&#9660;</span>
-		<span id="toggleOpcodeText">show 12 more opcodes (Sub through Sync)</span>
+		<span id="toggleOpcodeText">show all opcodes</span>
 		<span class="opcode-tri">&#9660;</span>
 	</td>
 </tr>
@@ -342,6 +370,7 @@ The targeted timing is 30fps. There is a hard limit of three million instruction
 </tr>
 </tbody>
 </table>
+</div>
 
 <script>
 	function toggleOpcodes() {
@@ -366,14 +395,14 @@ The targeted timing is 30fps. There is a hard limit of three million instruction
 		var tbody = table.querySelector('tbody');
 		if (isExpanded) {
 			toggleRow.classList.remove('expanded');
-			label.textContent = 'show 12 more opcodes (Sub through Sync)';
+			label.textContent = 'show all opcodes';
 			var rowAdd = tbody.querySelectorAll('tr')[3];
 			if (rowAdd && rowAdd.nextSibling) {
 				tbody.insertBefore(toggleRow, rowAdd.nextSibling);
 			}
 		} else {
 			toggleRow.classList.add('expanded');
-			label.textContent = 'hide extra opcodes';
+			label.textContent = 'show less';
 			tbody.appendChild(toggleRow);
 		}
 		
