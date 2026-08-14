@@ -37,7 +37,7 @@ build: build_specs
         -sASSERTIONS \
         -sALLOW_MEMORY_GROWTH=1 \
         --shell-file source/main_web/index_template.html
-    rm {{OUT_WEB}}/game.wasm.obj
+    rm -f {{OUT_WEB}}/game.wasm.obj
     echo "Web build created in {{OUT_WEB}}"
 
 serve port="8080":

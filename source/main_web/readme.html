@@ -123,6 +123,43 @@
 		img[src*="sketch.svg"] {
 			filter: invert(0.85) hue-rotate(180deg) contrast(0.95);
 		}
+
+		.opcode-table tr.hidden-row {
+			display: none;
+		}
+
+		tr.opcode-toggle-row td {
+			text-align: center;
+			background-color: transparent;
+			color: var(--link-color);
+			font-size: 0.75rem;
+			font-weight: 700;
+			cursor: pointer;
+			padding: 7px 10px;
+			letter-spacing: 0.5px;
+			transition: color 0.15s ease, background-color 0.15s ease;
+		}
+
+		tr.opcode-toggle-row:hover td {
+			color: #ffffff;
+			background-color: rgba(255, 255, 255, 0.05);
+		}
+
+		.opcode-tri {
+			display: inline-block;
+			margin: 0 8px;
+			color: var(--link-color);
+			font-size: 0.7rem;
+			transition: transform 0.2s ease, color 0.15s ease;
+		}
+
+		tr.opcode-toggle-row:hover .opcode-tri {
+			color: #ffffff;
+		}
+
+		tr.opcode-toggle-row.expanded .opcode-tri {
+			transform: rotate(180deg);
+		}
 	</style>
 </head>
 <body>
@@ -185,12 +222,12 @@ The targeted timing is 30fps. There is a hard limit of three million instruction
 <p>All instructions are 4 values long. A value is, of course, a u16.</p>
 <p>The instructions have the form <code>opcode arg1 arg2 arg3</code>.</p>
 <p>In the following table, all instructions are listed. <code>@arg1</code> refers to the value at the memory address <code>arg1</code>.</p>
-<blockquote>
-<p>[!NOTE]
-You can have data blobs in the binary that do not correspond with the opcodes.
-This is fine <strong>until and unless</strong> you explicitly try to run this blob of data as code.</p>
-</blockquote>
-<table>
+<!-- <blockquote> -->
+<!-- <p>[!NOTE] -->
+<!-- You can have data blobs in the binary that do not correspond with the opcodes. -->
+<!-- This is fine <strong>until and unless</strong> you explicitly try to run this blob of data as code.</p> -->
+<!-- </blockquote> -->
+<table class="opcode-table" id="opcodeTable">
 <thead>
 <tr>
 <th>Opcode</th>
@@ -224,73 +261,80 @@ This is fine <strong>until and unless</strong> you explicitly try to run this bl
 <td>yes</td>
 <td><code>@arg3=(@arg1+@arg2)</code></td>
 </tr>
-<tr>
+<tr class="opcode-toggle-row" id="opcodeToggleRow" onclick="toggleOpcodes()">
+	<td colspan="4">
+		<span class="opcode-tri">&#9660;</span>
+		<span id="toggleOpcodeText">show 12 more opcodes (Sub through Sync)</span>
+		<span class="opcode-tri">&#9660;</span>
+	</td>
+</tr>
+<tr class="hidden-row">
 <td>4</td>
 <td><strong>Sub</strong></td>
 <td>yes</td>
 <td><code>@arg3=(@arg1-@arg2)</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>5</td>
 <td><strong>Mul</strong></td>
 <td>yes</td>
 <td><code>@arg3=(@arg1*@arg2)</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>6</td>
 <td><strong>Div</strong></td>
 <td>yes</td>
 <td><code>@arg3=(@arg1/@arg2)</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>7</td>
 <td><strong>Cmp</strong></td>
 <td>yes</td>
 <td><code>@arg3=(@arg1&lt;@arg2)</code> as unsigned</td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>8</td>
 <td><strong>Deref</strong></td>
 <td>yes</td>
 <td><code>@arg2=@(@arg1+arg3)</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>9</td>
 <td><strong>Ref</strong></td>
 <td>yes</td>
 <td><code>@(@arg1+arg3)=@arg2</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>10</td>
 <td><strong>Debug</strong></td>
 <td>yes</td>
 <td>Provides <code>arg1,@arg2,@arg3</code> as debug information</td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>11</td>
 <td><strong>Print</strong></td>
 <td>yes</td>
 <td>Writes <code>value=@arg1</code> to <code>index=@arg2</code> of buffer <code>arg3</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>12</td>
 <td><strong>Read</strong></td>
 <td>yes</td>
 <td>Copies <code>index=@arg1</code> of buffer <code>arg3</code> to <code>@arg2</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>13</td>
 <td><strong>Band</strong></td>
 <td>yes</td>
 <td><code>@arg3=@arg1&amp;@arg2</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>14</td>
 <td><strong>Xor</strong></td>
 <td>yes</td>
 <td><code>@arg3=@arg1^@arg2</code></td>
 </tr>
-<tr>
+<tr class="hidden-row">
 <td>15</td>
 <td><strong>Sync</strong></td>
 <td>yes</td>
@@ -298,6 +342,47 @@ This is fine <strong>until and unless</strong> you explicitly try to run this bl
 </tr>
 </tbody>
 </table>
+
+<script>
+	function toggleOpcodes() {
+		var table = document.getElementById('opcodeTable');
+		var toggleRow = document.getElementById('opcodeToggleRow');
+		var label = document.getElementById('toggleOpcodeText');
+		if (!table || !toggleRow || !label) return;
+		
+		var hiddenRows = table.querySelectorAll('tr.hidden-row, tr.shown-row');
+		var isExpanded = toggleRow.classList.contains('expanded');
+		
+		hiddenRows.forEach(function(row) {
+			if (isExpanded) {
+				row.classList.remove('shown-row');
+				row.classList.add('hidden-row');
+			} else {
+				row.classList.remove('hidden-row');
+				row.classList.add('shown-row');
+			}
+		});
+		
+		var tbody = table.querySelector('tbody');
+		if (isExpanded) {
+			toggleRow.classList.remove('expanded');
+			label.textContent = 'show 12 more opcodes (Sub through Sync)';
+			var rowAdd = tbody.querySelectorAll('tr')[3];
+			if (rowAdd && rowAdd.nextSibling) {
+				tbody.insertBefore(toggleRow, rowAdd.nextSibling);
+			}
+		} else {
+			toggleRow.classList.add('expanded');
+			label.textContent = 'hide extra opcodes';
+			tbody.appendChild(toggleRow);
+		}
+		
+		if (window.parent && window.parent.resizeIframe) {
+			var iframe = window.parent.document.getElementById('readmeFrame');
+			if (iframe) window.parent.resizeIframe(iframe);
+		}
+	}
+</script>
 <h3>Constructing a Program</h3>
 <p>A program is just the initial state of the main memory.
 There is no distinction between memory that contains instructions and memory that contains some other asset.
