@@ -301,6 +301,26 @@
 			}
 		});
 
+		function updateGamepadStatus() {
+			var gamepads = (navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []));
+			var connected = false;
+			for (var i = 0; i < gamepads.length; i++) {
+				if (gamepads[i] && gamepads[i].connected) {
+					connected = true;
+					break;
+				}
+			}
+			var fn = (Module.asm && Module.asm.set_gamepad_connected) || (wasmExports && wasmExports.set_gamepad_connected);
+			if (fn) {
+				fn(connected ? 1 : 0);
+			}
+		}
+
+		window.addEventListener("gamepadconnected", updateGamepadStatus);
+		window.addEventListener("gamepaddisconnected", updateGamepadStatus);
+		window.addEventListener("click", updateGamepadStatus);
+		window.addEventListener("keydown", updateGamepadStatus);
+
 		function trigger_file_upload_js() {
 			document.getElementById('binary_file_input').click();
 		}

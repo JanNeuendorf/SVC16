@@ -25,6 +25,8 @@ has_uploaded_anything: bool = false
 dp: DrawPipeline
 sound_manager: SoundManager
 debug_buffer: DebugBuffer = {}
+gamepad_connected: bool = (ODIN_OS != .JS)
+
 paused := false
 error := false
 reload := false

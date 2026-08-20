@@ -1,5 +1,6 @@
 package game
 import rl "vendor:raylib"
+STICK_SENSITIVITY :: 0.5
 
 //ToDo Gamepad input
 GetInputCode :: proc(posX, posY, wh: f32) -> [2]u16 {
@@ -27,6 +28,43 @@ GetInputCode :: proc(posX, posY, wh: f32) -> [2]u16 {
 	}
 	if rl.IsKeyDown(rl.KeyboardKey.M) {
 		key_code += 128
+	}
+
+	if gamepad_connected {
+		// NES A Button (Bit 0 / +1): Physical Right (.RIGHT_FACE_RIGHT) and Bottom (.RIGHT_FACE_DOWN)
+		if (rl.IsGamepadButtonDown(0, .RIGHT_FACE_DOWN) ||
+			   rl.IsGamepadButtonDown(0, .RIGHT_FACE_RIGHT)) &&
+		   (1 & key_code == 0) {
+			key_code += 1
+		}
+		// NES B Button (Bit 1 / +2): Physical Left (.RIGHT_FACE_LEFT) and Top (.RIGHT_FACE_UP)
+		if (rl.IsGamepadButtonDown(0, .RIGHT_FACE_LEFT) ||
+			   rl.IsGamepadButtonDown(0, .RIGHT_FACE_UP)) &&
+		   (2 & key_code == 0) {
+			key_code += 2
+		}
+		if rl.IsGamepadButtonDown(0, .LEFT_FACE_UP) ||
+		   (rl.GetGamepadAxisMovement(0, .LEFT_Y) < -STICK_SENSITIVITY) {
+			key_code |= 4
+		}
+		if rl.IsGamepadButtonDown(0, .LEFT_FACE_DOWN) ||
+		   (rl.GetGamepadAxisMovement(0, .LEFT_Y) > STICK_SENSITIVITY) {
+			key_code |= 8
+		}
+		if rl.IsGamepadButtonDown(0, .LEFT_FACE_LEFT) ||
+		   (rl.GetGamepadAxisMovement(0, .LEFT_X) < -STICK_SENSITIVITY) {
+			key_code |= 16
+		}
+		if rl.IsGamepadButtonDown(0, .LEFT_FACE_RIGHT) ||
+		   (rl.GetGamepadAxisMovement(0, .LEFT_X) > STICK_SENSITIVITY) {
+			key_code |= 32
+		}
+		if rl.IsGamepadButtonDown(0, .MIDDLE_LEFT) {
+			key_code |= 64
+		}
+		if rl.IsGamepadButtonDown(0, .MIDDLE_RIGHT) {
+			key_code |= 128
+		}
 	}
 
 	mp := rl.GetMousePosition()
