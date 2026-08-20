@@ -91,25 +91,15 @@ GetGlobalLayout :: proc(zoomed: bool = false) -> GlobalLayout {
 }
 
 DrawMainTexture :: proc(dp: DrawPipeline, layout: GlobalLayout, shader: rl.Shader = {}) {
-	if shader.id > 0 {
-		rl.BeginShaderMode(shader)
-		rl.DrawTextureEx(
-			dp.texture,
-			{layout.screen.x, layout.screen.y},
-			0,
-			layout.screen.width / 256,
-			rl.WHITE,
-		)
-		rl.EndShaderMode()
-	} else {
-		rl.DrawTextureEx(
-			dp.texture,
-			{layout.screen.x, layout.screen.y},
-			0,
-			layout.screen.width / 256,
-			rl.WHITE,
-		)
-	}
+	if shader.id > 0 do rl.BeginShaderMode(shader)
+	rl.DrawTextureEx(
+		dp.texture,
+		{layout.screen.x, layout.screen.y},
+		0,
+		layout.screen.width / 256,
+		rl.WHITE,
+	)
+	if shader.id > 0 do rl.EndShaderMode()
 }
 
 MouseInMainScreen :: proc(layout: GlobalLayout) -> bool {

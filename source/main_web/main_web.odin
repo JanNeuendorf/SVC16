@@ -30,6 +30,7 @@ main_start :: proc "c" () {
 main_update :: proc "c" () -> bool {
 	context = web_context
 	game.update()
+	free_all(context.temp_allocator)
 	return true
 }
 
