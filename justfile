@@ -2,7 +2,7 @@
 
 ODIN_PATH := `odin root`
 OUT_WEB := justfile_dir() / "docs"
-SEMVER := "2.2.1"
+SEMVER := "2.2.2"
 
 build_specs:
     typst compile specification.typ {{justfile_dir()}}/assets/specs.pdf --input semver={{SEMVER}}
