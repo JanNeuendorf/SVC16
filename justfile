@@ -2,7 +2,7 @@
 
 ODIN_PATH := `odin root`
 OUT_WEB := justfile_dir() / "docs"
-SEMVER := "2.2.1"
+SEMVER := "2.2.2"
 
 build_specs:
     typst compile specification.typ {{justfile_dir()}}/assets/specs.pdf --input semver={{SEMVER}}
@@ -30,7 +30,7 @@ build: build_specs
         "{{ODIN_PATH}}/vendor/raylib/wasm/libraygui.a" \
         "{{ODIN_PATH}}/vendor/raylib/wasm/libraylib.web.a" \
         -sEXPORTED_RUNTIME_METHODS="['HEAPF32', 'HEAPU8']" \
-        -sEXPORTED_FUNCTIONS="['_malloc', '_free', '_main_start', '_main_update', '_main_end', '_load_user_file_data']" \
+        -sEXPORTED_FUNCTIONS="['_malloc', '_free', '_main_start', '_main_update', '_main_end', '_load_user_file_data', '_set_gamepad_connected']" \
         -sUSE_GLFW=3 \
         -sWASM_BIGINT \
         -sWARN_ON_UNDEFINED_SYMBOLS=0 \

@@ -12,10 +12,11 @@ GlobalLayout :: struct {
 	cursor_button: rl.Rectangle,
 	mute_button:   rl.Rectangle,
 	input_text:    rl.Rectangle,
+	zoomed:        bool,
 }
 
 
-GetGlobalLayout :: proc() -> GlobalLayout {
+GetGlobalLayout :: proc(zoomed: bool = false) -> GlobalLayout {
 	width := f32(rl.GetScreenWidth())
 	height := f32(rl.GetScreenHeight())
 	bar_height: f32 = 50.
@@ -24,6 +25,26 @@ GetGlobalLayout :: proc() -> GlobalLayout {
 	button_width: f32 = 70.
 	min_space := min(height - bar_height - dropper_height, width)
 	main_wh := f32(256 * (int(min_space) / 256))
+	if zoomed {
+		main := rl.Rectangle {
+			0,
+			0,
+			f32(max(rl.GetScreenHeight(), rl.GetScreenWidth())),
+			f32(max(rl.GetScreenHeight(), rl.GetScreenWidth())),
+		}
+		return GlobalLayout {
+			main,
+			rl.Rectangle{},
+			rl.Rectangle{},
+			rl.Rectangle{},
+			rl.Rectangle{},
+			rl.Rectangle{},
+			rl.Rectangle{},
+			rl.Rectangle{},
+			true,
+		}
+
+	}
 
 
 	main := rl.Rectangle {
@@ -65,11 +86,12 @@ GetGlobalLayout :: proc() -> GlobalLayout {
 		play.height,
 	}
 
-	return GlobalLayout{main, side_picker, bar, play, reload, cursor, mute, input}
+	return GlobalLayout{main, side_picker, bar, play, reload, cursor, mute, input, zoomed}
 
 }
 
-DrawMainTexture :: proc(dp: DrawPipeline, layout: GlobalLayout) {
+DrawMainTexture :: proc(dp: DrawPipeline, layout: GlobalLayout, shader: rl.Shader = {}) {
+	if shader.id > 0 do rl.BeginShaderMode(shader)
 	rl.DrawTextureEx(
 		dp.texture,
 		{layout.screen.x, layout.screen.y},
@@ -77,6 +99,7 @@ DrawMainTexture :: proc(dp: DrawPipeline, layout: GlobalLayout) {
 		layout.screen.width / 256,
 		rl.WHITE,
 	)
+	if shader.id > 0 do rl.EndShaderMode()
 }
 
 MouseInMainScreen :: proc(layout: GlobalLayout) -> bool {

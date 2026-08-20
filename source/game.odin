@@ -25,11 +25,14 @@ has_uploaded_anything: bool = false
 dp: DrawPipeline
 sound_manager: SoundManager
 debug_buffer: DebugBuffer = {}
+gamepad_connected: bool = (ODIN_OS != .JS)
+
 paused := false
 error := false
 reload := false
 cursor := false
 mute := false
+zoomed := false
 frame := 0
 pick: i32 = 0
 edit := false
@@ -39,15 +42,18 @@ event: EngineEvent = nil
 
 LOGO_PNG :: #load("../assets/logo_alpha.png")
 EXAMPLE :: #load("../examples/spikeavoider.svc16")
+CRT_SHADER_SRC :: #load("../assets/crt.fs", string)
 logo_texture: rl.Texture2D
+crt_shader: rl.Shader
 
 
 Mode :: enum {
 	Normal        = 0,
-	Overdraw      = 1,
-	SoundAsScreen = 2,
-	MemoryView    = 3,
-	Debug         = 4,
+	CRT           = 1,
+	Overdraw      = 2,
+	SoundAsScreen = 3,
+	MemoryView    = 4,
+	Debug         = 5,
 }
 
 
@@ -85,6 +91,7 @@ init :: proc() {
 
 	sound_manager = InitSoundManager()
 	dp = InitDrawPipeline()
+	crt_shader = rl.LoadShaderFromMemory(nil, fmt.ctprintf("%s\x00", CRT_SHADER_SRC))
 	rl.SetTraceLogLevel(.WARNING)
 	SetGuiProps()
 }
@@ -115,7 +122,10 @@ update :: proc() {
 		return
 	}
 	// Now the real loop
-	layout := GetGlobalLayout()
+	if rl.IsKeyPressed(.Z) {
+		zoomed = !zoomed
+	}
+	layout := GetGlobalLayout(zoomed)
 	if reload {
 		AddRomFromBufferAndReset(&e, uploaded_data.buffer)
 		reload = false
@@ -127,7 +137,11 @@ update :: proc() {
 		frame = 0
 	}
 
-	if !cursor && Mode(pick) == .Normal && MouseInMainScreen(layout) && !paused && !edit {
+	if !cursor &&
+	   (Mode(pick) == .Normal || Mode(pick) == .CRT) &&
+	   MouseInMainScreen(layout) &&
+	   !paused &&
+	   !edit {
 		rl.HideCursor()
 	} else {
 		rl.ShowCursor()
@@ -159,6 +173,11 @@ update :: proc() {
 	case .Normal:
 		UpdateDrawPipeline(&dp, e.screen_buffer)
 		DrawMainTexture(dp, layout)
+	case .CRT:
+		UpdateDrawPipeline(&dp, e.screen_buffer)
+		rl.SetTextureFilter(dp.texture, .BILINEAR)
+		DrawMainTexture(dp, layout, crt_shader)
+		rl.SetTextureFilter(dp.texture, .POINT)
 	case .Overdraw:
 		UpdateDrawPipeline(&dp, e.overdraw_buffer, heatmap)
 		DrawMainTexture(dp, layout)
@@ -179,23 +198,27 @@ update :: proc() {
 	rl.DrawRectangleRec(layout.bar, rl.Color{50, 50, 50, 255})
 	if rl.GuiDropdownBox(
 		layout.picker,
-		"Normal;Overdraw;Sound as Screen;Memory View;Debug",
+		"Normal;Normal (CRT);Overdraw;Sound as Screen;Memory View;Debug",
 		&pick,
 		edit,
 	) {
 		edit = !edit
 	}
-
+	// This is very fragile. When zoomed is true, the buttons have no size
 	HandleButtons(layout, &paused, &reload, &cursor, &sound_manager, &mute)
 
-	DrawBarLine(layout, event, input, i_count)
-	fps_text := fmt.ctprintf("%d FPS", measured_fps)
-	rl.DrawText(fps_text, 5, 5, 20, rl.LIME)
+	if !layout.zoomed {
+		DrawBarLine(layout, event, input, i_count)
+		fps_color: rl.Color = measured_fps > 27 ? rl.LIME : rl.RED
+		fps_text := fmt.ctprintf("%d FPS", measured_fps)
+		rl.DrawText(fps_text, 5, 5, 20, fps_color)
+	}
 
 	for (rl.GetTime() - start_time) < (1.0 / TARGET_FPS - 0.0005) {}
 }
 
 shutdown :: proc() {
+	rl.UnloadShader(crt_shader)
 	delete(uploaded_data.buffer)
 	rl.CloseAudioDevice()
 	rl.CloseWindow()
