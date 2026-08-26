@@ -26,11 +26,12 @@ GetGlobalLayout :: proc(zoomed: bool = false) -> GlobalLayout {
 	min_space := min(height - bar_height - dropper_height, width)
 	main_wh := f32(256 * (int(min_space) / 256))
 	if zoomed {
+		zoom_size := min(width, height)
 		main := rl.Rectangle {
-			0,
-			0,
-			f32(max(rl.GetScreenHeight(), rl.GetScreenWidth())),
-			f32(max(rl.GetScreenHeight(), rl.GetScreenWidth())),
+			(width - zoom_size) / 2,
+			(height - zoom_size) / 2,
+			zoom_size,
+			zoom_size,
 		}
 		return GlobalLayout {
 			main,
@@ -43,7 +44,6 @@ GetGlobalLayout :: proc(zoomed: bool = false) -> GlobalLayout {
 			rl.Rectangle{},
 			true,
 		}
-
 	}
 
 
@@ -80,7 +80,7 @@ GetGlobalLayout :: proc(zoomed: bool = false) -> GlobalLayout {
 		play.height,
 	}
 	input := rl.Rectangle {
-		mute.x + play.width + 4 * button_buffer + width - 980,
+		mute.x + play.width + 4 * button_buffer,
 		play.y,
 		button_width * 3,
 		play.height,
@@ -158,14 +158,20 @@ DrawBarLine :: proc(layout: GlobalLayout, event: EngineEvent, input: [2]u16, i_c
 			i_text = fmt.ctprintf("%d", c)
 		}
 	}
-	bartext := fmt.ctprintf(
-		"mx: %03d my: %03d mc: %05d kc: %03d     instructions: %s",
-		input[0] % 256,
-		input[0] / 256,
-		input[0],
-		input[1],
-		i_text,
-	)
+	bartext: cstring
+	if rl.GetRenderWidth() < 1000 {
+		bartext = fmt.ctprintf("instructions: %s", i_text)
+
+	} else {
+		bartext = fmt.ctprintf(
+			"mx: %03d my: %03d mc: %05d kc: %03d     instructions: %s",
+			input[0] % 256,
+			input[0] / 256,
+			input[0],
+			input[1],
+			i_text,
+		)
+	}
 	rl.DrawText(
 		bartext,
 		i32(layout.input_text.x),
@@ -210,7 +216,7 @@ SetGuiProps :: proc() {
 		i32(rl.GuiControlProperty.BORDER_COLOR_PRESSED),
 		focused_dark,
 	)
-	rl.SetWindowMinSize(1000, 800)
+	rl.SetWindowMinSize(700, 650)
 }
 
 DrawError :: proc(layout: GlobalLayout, event: EngineEvent, frame: int) {

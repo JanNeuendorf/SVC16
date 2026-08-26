@@ -17,7 +17,6 @@ UploadedData :: struct {
 
 uploaded_data: UploadedData
 
-
 TEXTURE_SIZE :: 256
 TARGET_FPS :: 30.
 e: Engine
@@ -73,16 +72,33 @@ load_user_file_data :: proc "c" (data: [^]u8, size: c.int, name: cstring) {
 	paused = false
 	error = false
 	frame = 0
+	set_loaded_file_path(name)
+	when ODIN_OS != .JS {
+		if name != nil {
+			rl.SetWindowTitle(fmt.ctprintf("SVC16 - %s", name))
+		}
+	}
 }
 
 
 init :: proc() {
+	rl.SetTraceLogLevel(.NONE)
 	rl.InitAudioDevice()
-	rl.SetConfigFlags({.VSYNC_HINT})
+	when ODIN_OS != .JS {
+		rl.SetConfigFlags({.VSYNC_HINT, .WINDOW_RESIZABLE})
+		rl.SetTargetFPS(i32(TARGET_FPS))
+	} else {
+		rl.SetConfigFlags({.VSYNC_HINT})
+	}
 	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "SVC16")
 	e = CreateEngine()
 
 	logo_img := rl.LoadImageFromMemory(".png", raw_data(LOGO_PNG), i32(len(LOGO_PNG)))
+	when ODIN_OS != .JS {
+		rl.SetWindowIcon(logo_img)
+		MAPPINGS: string : "03000000d62000000128000000000000,BDA Xbox ONE Enhanced Controller,platform:Linux,a:b0,b:b1,x:b2,y:b3,back:b6,start:b7,guide:b8,leftstick:b9,rightstick:b10,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,\n03000000d62000000128000000010000,BDA Xbox ONE Enhanced Controller,platform:Linux,a:b0,b:b1,x:b2,y:b3,back:b6,start:b7,guide:b8,leftstick:b9,rightstick:b10,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,\n03000000d62000000128000001010000,BDA Xbox ONE Enhanced Controller,platform:Linux,a:b0,b:b1,x:b2,y:b3,back:b6,start:b7,guide:b8,leftstick:b9,rightstick:b10,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,\n03000000d62000000128000010010000,BDA Xbox ONE Enhanced Controller,platform:Linux,a:b0,b:b1,x:b2,y:b3,back:b6,start:b7,guide:b8,leftstick:b9,rightstick:b10,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,\n03000000d62000000128000011010000,BDA Xbox ONE Enhanced Controller,platform:Linux,a:b0,b:b1,x:b2,y:b3,back:b6,start:b7,guide:b8,leftstick:b9,rightstick:b10,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,\n\x00"
+		rl.SetGamepadMappings(cstring(raw_data(MAPPINGS)))
+	}
 	logo_texture = rl.LoadTextureFromImage(logo_img)
 	rl.UnloadImage(logo_img)
 
@@ -92,7 +108,6 @@ init :: proc() {
 	sound_manager = InitSoundManager()
 	dp = InitDrawPipeline()
 	crt_shader = rl.LoadShaderFromMemory(nil, fmt.ctprintf("%s\x00", CRT_SHADER_SRC))
-	rl.SetTraceLogLevel(.WARNING)
 	SetGuiProps()
 }
 
@@ -113,20 +128,37 @@ update :: proc() {
 	defer rl.EndDrawing()
 	rl.ClearBackground(rl.BLACK)
 	if !has_uploaded_anything {
-		if rl.IsMouseButtonPressed(.LEFT) {
+		start_triggered := rl.IsMouseButtonPressed(.LEFT) || rl.IsKeyPressed(.SPACE) || rl.IsKeyPressed(.ENTER)
+		when ODIN_OS != .JS {
+			for pad in i32(0) ..< 4 {
+				if rl.IsGamepadAvailable(pad) {
+					if rl.IsGamepadButtonPressed(pad, .RIGHT_FACE_DOWN) ||
+					   rl.IsGamepadButtonPressed(pad, .RIGHT_FACE_RIGHT) ||
+					   rl.IsGamepadButtonPressed(pad, .MIDDLE_RIGHT) {
+						start_triggered = true
+						break
+					}
+				}
+			}
+		}
+		if start_triggered {
 			AddRomFromBufferAndReset(&e, EXAMPLE)
 			copy(uploaded_data.buffer, EXAMPLE)
 			has_uploaded_anything = true
+			when ODIN_OS != .JS {
+				rl.SetWindowTitle("SVC16 - spikeavoider.svc16")
+			}
 		}
 		DrawStartupAnimation()
 		return
 	}
 	// Now the real loop
-	if rl.IsKeyPressed(.Z) {
+	if rl.IsKeyPressed(.Z) || rl.IsKeyPressed(.Y) {
 		zoomed = !zoomed
 	}
 	layout := GetGlobalLayout(zoomed)
 	if reload {
+		reload_rom_from_disk_if_available()
 		AddRomFromBufferAndReset(&e, uploaded_data.buffer)
 		reload = false
 		paused = false
@@ -214,10 +246,13 @@ update :: proc() {
 		rl.DrawText(fps_text, 5, 5, 20, fps_color)
 	}
 
-	for (rl.GetTime() - start_time) < (1.0 / TARGET_FPS - 0.0005) {}
+	when ODIN_OS == .JS {
+		for (rl.GetTime() - start_time) < (1.0 / TARGET_FPS - 0.0005) {}
+	}
 }
 
 shutdown :: proc() {
+	cleanup_loaded_file_path()
 	rl.UnloadShader(crt_shader)
 	delete(uploaded_data.buffer)
 	rl.CloseAudioDevice()
