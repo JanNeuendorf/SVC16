@@ -18,6 +18,9 @@ Run the pre-built site with the emulator locally:
 git clone https://github.com/JanNeuendorf/SVC16 && python -m http.server -d SVC16/docs
 ```
 
+To make development and fast iteration easier, you can also compile a native desktop build of the emulator with Odin using the `just build_desktop` command (or compile directly with `odin build source/main_desktop [options...]`).
+
+
 ## Contributing
 
 First of all, if you managed to build a cool game or program for the system, please share it!
