@@ -24,6 +24,8 @@ has_uploaded_anything: bool = false
 dp: DrawPipeline
 sound_manager: SoundManager
 debug_buffer: DebugBuffer = {}
+debug_log: DebugLog = {}
+perf_tracker: PerformanceTracker = {}
 gamepad_connected: bool = (ODIN_OS != .JS)
 
 paused := false
@@ -42,8 +44,10 @@ event: EngineEvent = nil
 LOGO_PNG :: #load("../assets/logo_alpha.png")
 EXAMPLE :: #load("../examples/spikeavoider.svc16")
 CRT_SHADER_SRC :: #load("../assets/crt.fs", string)
+FONT_TTF :: #load("../assets/font.ttf")
 logo_texture: rl.Texture2D
 crt_shader: rl.Shader
+ui_font: rl.Font
 
 
 Mode :: enum {
@@ -67,6 +71,8 @@ load_user_file_data :: proc "c" (data: [^]u8, size: c.int, name: cstring) {
 	mem.copy(raw_data(uploaded_data.buffer), data, copy_len)
 	AddRomFromBufferAndReset(&e, uploaded_data.buffer)
 	ResetSoundManager(&sound_manager)
+	ResetDebugLog(&debug_log)
+	perf_tracker = InitPerformanceTracker()
 	has_uploaded_anything = true
 	reload = false
 	paused = false
@@ -108,6 +114,8 @@ init :: proc() {
 	sound_manager = InitSoundManager()
 	dp = InitDrawPipeline()
 	crt_shader = rl.LoadShaderFromMemory(nil, fmt.ctprintf("%s\x00", CRT_SHADER_SRC))
+	ui_font = rl.LoadFontFromMemory(".ttf", raw_data(FONT_TTF), i32(len(FONT_TTF)), 64, nil, 0)
+	rl.SetTextureFilter(ui_font.texture, .BILINEAR)
 	SetGuiProps()
 }
 
@@ -127,6 +135,8 @@ update :: proc() {
 	rl.BeginDrawing()
 	defer rl.EndDrawing()
 	rl.ClearBackground(rl.BLACK)
+
+	// Title screen logic
 	if !has_uploaded_anything {
 		start_triggered := rl.IsMouseButtonPressed(.LEFT) || rl.IsKeyPressed(.SPACE) || rl.IsKeyPressed(.ENTER)
 		when ODIN_OS != .JS {
@@ -145,6 +155,8 @@ update :: proc() {
 			AddRomFromBufferAndReset(&e, EXAMPLE)
 			copy(uploaded_data.buffer, EXAMPLE)
 			has_uploaded_anything = true
+			ResetDebugLog(&debug_log)
+			perf_tracker = InitPerformanceTracker()
 			when ODIN_OS != .JS {
 				rl.SetWindowTitle("SVC16 - spikeavoider.svc16")
 			}
@@ -166,6 +178,8 @@ update :: proc() {
 		// FreeSoundManager(sound_manager)
 		// sound_manager = InitSoundManager()
 		ResetSoundManager(&sound_manager)
+		ResetDebugLog(&debug_log)
+		perf_tracker = InitPerformanceTracker()
 		frame = 0
 	}
 
@@ -184,6 +198,10 @@ update :: proc() {
 		input = GetInputCode(layout.screen.x, layout.screen.y, layout.screen.width)
 		event, i_count = StepEngineFrame(&e, input, &debug_buffer)
 		frame += 1
+		for i in 0 ..< debug_buffer.len {
+			AddDebugLogMessage(&debug_log, frame, debug_buffer.content[i])
+		}
+		RecordPerformanceFrame(&perf_tracker, i_count, e.main_buffer, e.overdraw_buffer)
 	}
 
 	if event == .DivByZero || event == .InvalidOpCode {
@@ -220,7 +238,9 @@ update :: proc() {
 		UpdateDrawPipeline(&dp, e.main_buffer, hash_u16)
 		DrawMainTexture(dp, layout)
 	case .Debug:
-		DrawDebugMode(&debug_buffer, layout, frame)
+		UpdateDrawPipeline(&dp, e.screen_buffer)
+		DrawMainTexture(dp, layout)
+		DrawDebugAndPerfMode(&debug_log, &perf_tracker, layout, frame, measured_fps, ui_font)
 	}
 
 	if error {
@@ -254,6 +274,7 @@ update :: proc() {
 shutdown :: proc() {
 	cleanup_loaded_file_path()
 	rl.UnloadShader(crt_shader)
+	rl.UnloadFont(ui_font)
 	delete(uploaded_data.buffer)
 	rl.CloseAudioDevice()
 	rl.CloseWindow()
