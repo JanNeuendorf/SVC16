@@ -23,8 +23,6 @@ e: Engine
 has_uploaded_anything: bool = false
 dp: DrawPipeline
 sound_manager: SoundManager
-debug_buffer: DebugBuffer = {}
-debug_log: DebugLog = {}
 perf_tracker: PerformanceTracker = {}
 gamepad_connected: bool = (ODIN_OS != .JS)
 
@@ -43,7 +41,11 @@ event: EngineEvent = nil
 
 LOGO_PNG :: #load("../assets/logo_alpha.png")
 EXAMPLE :: #load("../examples/spikeavoider.svc16")
-CRT_SHADER_SRC :: #load("../assets/crt.fs", string)
+when ODIN_OS == .JS {
+	CRT_SHADER_SRC :: #load("../assets/crt_web.fs", string)
+} else {
+	CRT_SHADER_SRC :: #load("../assets/crt.fs", string)
+}
 FONT_TTF :: #load("../assets/font.ttf")
 logo_texture: rl.Texture2D
 crt_shader: rl.Shader
@@ -71,8 +73,7 @@ load_user_file_data :: proc "c" (data: [^]u8, size: c.int, name: cstring) {
 	mem.copy(raw_data(uploaded_data.buffer), data, copy_len)
 	AddRomFromBufferAndReset(&e, uploaded_data.buffer)
 	ResetSoundManager(&sound_manager)
-	ResetDebugLog(&debug_log)
-	perf_tracker = InitPerformanceTracker()
+	perf_tracker = {}
 	has_uploaded_anything = true
 	reload = false
 	paused = false
@@ -155,8 +156,7 @@ update :: proc() {
 			AddRomFromBufferAndReset(&e, EXAMPLE)
 			copy(uploaded_data.buffer, EXAMPLE)
 			has_uploaded_anything = true
-			ResetDebugLog(&debug_log)
-			perf_tracker = InitPerformanceTracker()
+			perf_tracker = {}
 			when ODIN_OS != .JS {
 				rl.SetWindowTitle("SVC16 - spikeavoider.svc16")
 			}
@@ -178,8 +178,7 @@ update :: proc() {
 		// FreeSoundManager(sound_manager)
 		// sound_manager = InitSoundManager()
 		ResetSoundManager(&sound_manager)
-		ResetDebugLog(&debug_log)
-		perf_tracker = InitPerformanceTracker()
+		perf_tracker = {}
 		frame = 0
 	}
 
@@ -193,15 +192,23 @@ update :: proc() {
 		rl.ShowCursor()
 	}
 
-	if !paused && !error {
-		debug_buffer = DebugBuffer{}
-		input = GetInputCode(layout.screen.x, layout.screen.y, layout.screen.width)
-		event, i_count = StepEngineFrame(&e, input, &debug_buffer)
-		frame += 1
-		for i in 0 ..< debug_buffer.len {
-			AddDebugLogMessage(&debug_log, frame, debug_buffer.content[i])
+	step_single := paused && rl.IsKeyPressed(.ONE)
+	if (!paused || step_single) && !error {
+		cur_debug: DebugBuffer = {}
+		if !step_single {
+			input = edit ? {0, 0} : GetInputCode(layout.screen.x, layout.screen.y, layout.screen.width)
 		}
-		RecordPerformanceFrame(&perf_tracker, i_count, e.main_buffer, e.overdraw_buffer)
+		event, i_count = StepEngineFrame(&e, input, &cur_debug)
+		frame += 1
+		RecordPerformanceFrame(
+			&perf_tracker,
+			i_count,
+			e.main_buffer,
+			e.overdraw_buffer,
+			&cur_debug,
+			frame,
+			event == .SyncTimeout,
+		)
 	}
 
 	if event == .DivByZero || event == .InvalidOpCode {
@@ -240,7 +247,7 @@ update :: proc() {
 	case .Debug:
 		UpdateDrawPipeline(&dp, e.screen_buffer)
 		DrawMainTexture(dp, layout)
-		DrawDebugAndPerfMode(&debug_log, &perf_tracker, layout, frame, measured_fps, ui_font)
+		DrawDebugAndPerfMode(&perf_tracker, layout, frame, ui_font)
 	}
 
 	if error {
