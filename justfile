@@ -4,7 +4,7 @@ ODIN_PATH := `odin root`
 OUT_WEB := justfile_dir() / "docs"
 OUT_DESKTOP := justfile_dir() / "build"
 EXE_NAME := "svc16"
-SEMVER := "2.2.3"
+SEMVER := "2.2.4"
 
 build_desktop:
     mkdir -p {{OUT_DESKTOP}}
