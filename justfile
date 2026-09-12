@@ -4,7 +4,7 @@ ODIN_PATH := `odin root`
 OUT_WEB := justfile_dir() / "docs"
 OUT_DESKTOP := justfile_dir() / "build"
 EXE_NAME := "svc16"
-SEMVER := "2.2.3"
+SEMVER := "2.2.4"
 
 build_desktop:
     mkdir -p {{OUT_DESKTOP}}
@@ -30,7 +30,7 @@ build: build_specs
     cp source/main_web/site.html {{OUT_WEB}}/index.html
     cp source/main_web/readme.html {{OUT_WEB}}/readme.html
     mkdir -p {{OUT_WEB}}/assets
-    cp -r assets/* {{OUT_WEB}}/assets/
+    cp assets/*.png assets/*.svg assets/*.pdf assets/*.gif {{OUT_WEB}}/assets/
     emcc -O2 -o {{OUT_WEB}}/game.html \
         {{OUT_WEB}}/game.wasm.obj \
         "{{ODIN_PATH}}/vendor/raylib/wasm/libraygui.a" \

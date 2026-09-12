@@ -1,8 +1,11 @@
-precision mediump float;
+#version 330
 
-// Input attributes from Raylib WebGL1 / GLES2 vertex shader
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
+// Input attributes from Raylib vertex shader
+in vec2 fragTexCoord;
+in vec4 fragColor;
+
+// Output fragment color
+out vec4 finalColor;
 
 // Uniforms from Raylib
 uniform sampler2D texture0;
@@ -28,14 +31,14 @@ void main() {
 
     // Out of bounds check for CRT bezel
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-        gl_FragColor = BEZEL_COLOR;
+        finalColor = BEZEL_COLOR;
         return;
     }
 
     // Chromatic Aberration 
-    float r = texture2D(texture0, vec2(uv.x - CHROMATIC_OFFSET, uv.y)).r;
-    float g = texture2D(texture0, uv).g;
-    float b = texture2D(texture0, vec2(uv.x + CHROMATIC_OFFSET, uv.y)).b;
+    float r = texture(texture0, vec2(uv.x - CHROMATIC_OFFSET, uv.y)).r;
+    float g = texture(texture0, uv).g;
+    float b = texture(texture0, vec2(uv.x + CHROMATIC_OFFSET, uv.y)).b;
     vec3 col = vec3(r, g, b);
 
     // Scanlines
@@ -52,5 +55,5 @@ void main() {
     // Brightness boost to offset scanline dimming
     col *= BRIGHTNESS_BOOST;
 
-    gl_FragColor = vec4(col, 1.0) * fragColor * colDiffuse;
+    finalColor = vec4(col, 1.0) * fragColor * colDiffuse;
 }
